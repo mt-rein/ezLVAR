@@ -1,14 +1,19 @@
-#' Title
+#' Creates an Innovation Covariance Matrix
 #'
-#' @param n_factors
-#' @param random_intercept
-#' @param free
-#' @param startvalues
-#' @param labels
-#' @param lbound
-#' @param ubound
+#' @description
+#' This is a helper function to create the Q matrix, which is required to specify the structural model for `step3()`.
+#' The Q matrix describes the innovation (co)variances (i.e., the residuals of the latent variables).
 #'
-#' @return
+#'
+#' @param step2output The output obtained with the `step2()` function.
+#' @param startvalues A matrix that represents the starting values. Must have the same dimensions as `free`, `labels`, `lbound` and `ubound` if these are not `NULL`.
+#' @param random_intercept Logical. If TRUE, the matrices `startvalues`, `free`, `labels`, `lbound`, and `ubound` are automatically expanded to accommodate the specification a random intercept.
+#' @param free A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If NULL, all variances and covariances are freely estimated. If not NULL, the matrix must have the same dimensions as `startvalues`, as well as `labels`, `lbound` and `ubound` if these are not `NULL`.
+#' @param labels A matrix of strings that indicates the labels for each parameter. Optional. If NULL, labels will be automatically generated. If not NULL, the matrix must have the same dimensions as `startvalues`, as well as `free`, `lbound` and `ubound` if these are not `NULL`.
+#' @param lbound A matrix of numeric values that indicates the lower bounds for each parameter. Optional. If NA, no bounds are imposed.
+#' @param ubound A matrix of numeric values that indicates the upper bounds for each parameter. Optional. If NA, no bounds are imposed.
+#'
+#' @return Q An `OpenMx` matrix object that is passed on to `step3()`.
 #' @export
 #'
 #' @examples
@@ -16,6 +21,36 @@ create_Q <- function(step2output, startvalues,
                      random_intercept = FALSE, free = NULL,
                      labels = NULL, lbound = NA, ubound = NA){
 
+  # Checks:
+  if(!is.null(free)){
+    if(dim(startvalues) != dim(free)){
+      stop("The free matrix must have the same dimensions as the startvalues matrix.")
+    }
+  }
+
+  if(!is.null(labels)){
+    if(dim(startvalues) != dim(labels)){
+      stop("The labels matrix must have the same dimensions as the startvalues matrix.")
+    }
+  }
+
+  if(!is.null(lbound)){
+    if(dim(startvalues) != dim(lbound)){
+      stop("The lbound matrix must have the same dimensions as the startvalues matrix.")
+    }
+  }
+
+  if(!is.null(ubound)){
+    if(dim(startvalues) != dim(ubound)){
+      stop("The ubound matrix must have the same dimensions as the startvalues matrix.")
+    }
+  }
+
+  if(!is.logical(random_intercept)){
+    stop("The random_intercept argument must be TRUE or FALSE.")
+  }
+
+  # extract information on factors:
   factors <- step2output$other$factors
   n_factors <- length(factors)
 
@@ -37,6 +72,14 @@ create_Q <- function(step2output, startvalues,
       }
     }
 
+    # create lbound and ubound objects if not specified by user
+    if(is.null(lbound)){
+      lbound <- NA
+    }
+    if(is.null(ubound)){
+      ubound <- NA
+    }
+
     # create OpenMx model object
     Q <- OpenMx::mxMatrix(type = "Full", name = "Q",
                           nrow = n_factors, ncol = n_factors,
@@ -53,6 +96,7 @@ create_Q <- function(step2output, startvalues,
     if(is.null(free)){
       free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
     }
+    # expand free matrix with random intercept specification
     others <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
     free <- rbind(cbind(free, others),
                   cbind(others, others))
@@ -68,11 +112,27 @@ create_Q <- function(step2output, startvalues,
         }
       }
     }
+    # expand label matrix with random intercept specification
     others <- matrix(NA, nrow = n_factors, ncol = n_factors)
     labels <- rbind(cbind(labels, others),
                     cbind(others, others))
 
-    # create (start)value matrix
+    # expand lbound and ubound matrices with random intercept specification:
+    others <- matrix(NA, nrow = n_factors, ncol = n_factors)
+    if(is.null(lbound)){
+      lbound <- NA
+    } else {
+      lbound <- rbind(cbind(lbound, others),
+                      cbind(others, others))
+    }
+    if(is.null(ubound)){
+      ubound <- NA
+    } else {
+      ubound <- rbind(cbind(ubound, others),
+                      cbind(others, others))
+    }
+
+    # expand startvalue matrix with random intercept specification
     others <- matrix(0, nrow = n_factors, ncol = n_factors)
     startvalues <- rbind(cbind(startvalues, others),
                     cbind(others, others))
@@ -91,5 +151,3 @@ create_Q <- function(step2output, startvalues,
 
   return(Q)
 }
-
-# to do: add lbound and ubound to random intercept part
