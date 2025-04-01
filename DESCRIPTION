@@ -1,9 +1,9 @@
 Package: ezLVAR
-Title: What the Package Does (One Line, Title Case)
+Title: Estimate Latent Vector Autoregressive Models
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Manuel T.", "Rein", email = "m.t.rein@tilburguniversity.edu", role = c( "aut", "cre"))
+Description: `ezLVAR` aids researchers in implementing the Three-Step Latent Vector Autoregression method. In the first step, the measurement model ist estimated. In the second step, factor scores and  their reliability are computed. In the third step, the parameters of the structural model are estimated.
 License: CC BY 4.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

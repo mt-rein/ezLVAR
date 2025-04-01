@@ -2,7 +2,7 @@
 % Please edit documentation in R/step2.R
 \name{step2}
 \alias{step2}
-\title{Step 2: obtain factor scores}
+\title{Step 2: Obtain Factor Scores}
 \usage{
 step2(step1output)
 }
@@ -19,9 +19,7 @@ A list containing the following elements:
 \code{theta_star} The values for theta* (by group, where applicable)
 
 \code{other} A list containing information on the names of the \code{factors}, \code{indicators}, and the grouping variable of step 1 (\code{step1group}).
-
-\code{MMparameters} A list containing the measurement parameters (per group, when applicable).
 }
 \description{
-Step 2: obtain factor scores
+This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to \code{step3()}.
 }

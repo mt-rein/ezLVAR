@@ -2,7 +2,7 @@
 % Please edit documentation in R/step3.R
 \name{step3}
 \alias{step3}
-\title{Title}
+\title{Step 3: Estimate the Structural Model}
 \usage{
 step3(
   step2output,
@@ -34,5 +34,5 @@ step3(
 loremipsum
 }
 \description{
-Title
+This function performs Step 3 of 3S-LVAR: Estimate the Structural Model using the factor scores as single indicators while accounting for their inherent uncertainty. It is a wrapper
 }
