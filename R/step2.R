@@ -1,4 +1,6 @@
-#' Step 2: obtain factor scores
+#' Step 2: Obtain Factor Scores
+#' @description
+#' This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to `step3()`.
 #'
 #' @param step1output The output obtained with the `step1()` function.
 #'
@@ -11,6 +13,7 @@
 #' `theta_star` The values for theta* (by group, where applicable)
 #'
 #' `other` A list containing information on the names of the `factors`, `indicators`, and the grouping variable of step 1 (`step1group`).
+#' @export
 
 step2 <- function(step1output){
   ## Preparations

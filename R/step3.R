@@ -1,13 +1,28 @@
-#' Title
+#' Step 3: Estimate the Structural Model
+#'
+#' @description
+#' This function performs Step 3 of 3S-LVAR: Estimate the Structural Model using the factor scores as single indicators while accounting for their inherent uncertainty.
+#' The estimation is implemented in the State Space Model framework in OpenMx.
 #'
 #' @param step2output The output obtained with the `step2()` function.
 #' @param id A string containing the name of the ID variable.
-#' @param A An OpenMx matrix object that describes the time regressive coefficients in the state-transition model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See `?mxExpectationStateSpace`. Optional. If NULL, the function will automatically create a matrix that comprises all possible auto- and cross-regressive effects.
-#' @param Q An OpenMx matrix object that describes the innovation (co)variance matrix. See `?mxExpectationStateSpace`. Optional. If NULL, the function will automatically create a matrix that comprises all possible innovation (co)variances.
-#' @param random_intercept Logical. Should random intercepts for the latent variables be included?
+#' @param A An `OpenMx` matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See [?OpenMx::mxExpectationStateSpace]. The helper function `create_A()` is available to create this object.
+#' @param Q An `OpenMx` matrix object that describes the innovation (co)variance matrix. See `?mxExpectationStateSpace`. The helper function `create_Q()` is available to create this object.
+#' @param B An `OpenMx` matrix object that describes the covariate effects on the latent variables. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.
+#' @param D An `OpenMx` matrix object that describes the covariate effects on the observed items. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.
+#' @param x0 An `OpenMx` matrix object that describes the initial latent variable vector that initiates the Kalman Filter. Optional. If NULL, an object is automatically created where all values are fixed to 0.
+#' @param P0 An `OpenMx` matrix object that describes the initial error covariance matrix that initiates the Kalman Filter. Optional. If NULL, a matrix will be automatically created. The parameters are freely estimated, with large starting values (100 for the diagonal and 10 for the off-diagonal).
+#' @param u An `OpenMx` matrix object that indicates the covariates. Required if `B` or `D` are included. If NULL, an object with no covariates is automatically created.
 #' @param step3group A string containing the name of the grouping variable for the structural model.
 #'
-#' @return loremipsum
+#' @return A list containing the following elements:
+#'
+#' `data` The data set which served as input.
+#'
+#' `estimates` A vector that includes the parameter estimates.
+#'
+#' `model` The fitted model (an OpenMx object).
+#'
 #' @export
 #' @importFrom OpenMx imxReportProgress
 
