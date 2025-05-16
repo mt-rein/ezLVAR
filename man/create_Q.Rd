@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_Q.R
 \name{create_Q}
 \alias{create_Q}
-\title{Title}
+\title{Creates an Innovation Covariance Matrix}
 \usage{
 create_Q(
   step2output,
@@ -10,13 +10,29 @@ create_Q(
   random_intercept = FALSE,
   free = NULL,
   labels = NULL,
-  lbound = NA,
-  ubound = NA
+  lbound = NULL,
+  ubound = NULL
 )
 }
 \arguments{
-\item{ubound}{}
+\item{step2output}{The output obtained with the \code{\link[=step2]{step2()}} function.}
+
+\item{startvalues}{A matrix that represents the starting values. Must have the same dimensions as \code{free}, \code{labels}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
+
+\item{random_intercept}{Logical. If TRUE, the matrices \code{startvalues}, \code{free}, \code{labels}, \code{lbound}, and \code{ubound} are automatically expanded to accommodate the specification a random intercept.}
+
+\item{free}{A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If NULL, all variances and covariances are freely estimated. If not NULL, the matrix must have the same dimensions as \code{startvalues}, as well as \code{labels}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
+
+\item{labels}{A matrix of strings that indicates the labels for each parameter. Optional. If NULL, labels will be automatically generated. If not NULL, the matrix must have the same dimensions as \code{startvalues}, as well as \code{free}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
+
+\item{lbound}{A matrix of numeric values that indicates the lower bounds for each parameter. Optional. If NA, no bounds are imposed.}
+
+\item{ubound}{A matrix of numeric values that indicates the upper bounds for each parameter. Optional. If NA, no bounds are imposed.}
+}
+\value{
+Q An \code{OpenMx} matrix object that is enter into \code{\link[=step3]{step3()}}.
 }
 \description{
-Title
+This is a helper function to create the Q matrix, which is required to specify the structural model for \code{\link[=step3]{step3()}}.
+The Q matrix describes the innovation (co)variances (i.e., the residuals of the latent variables).
 }

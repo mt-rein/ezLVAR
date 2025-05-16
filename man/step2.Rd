@@ -21,5 +21,5 @@ A list containing the following elements:
 \code{other} A list containing information on the names of the \code{factors}, \code{indicators}, and the grouping variable of step 1 (\code{step1group}).
 }
 \description{
-This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to \code{step3()}.
+This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to \code{\link[=step3]{step3()}}.
 }

@@ -1,10 +1,10 @@
 #' Creates a Regression Effects Matrix
 #'
 #' @description
-#' This is a helper function to create the A matrix, which is required to specify the structural model for `step3()`.
+#' This is a helper function to create the A matrix, which is required to specify the structural model for [step3()].
 #' The A matrix describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects.
 #'
-#' @param step2output The output obtained with the `step2()` function.
+#' @param step2output The output obtained with the [step2()] function.
 #' @param startvalues A matrix that represents the starting values. Must have the same dimensions as `free`, `labels`, `lbound` and `ubound` if these are not `NULL`.
 #' @param random_intercept Logical. If TRUE, the matrices `startvalues`, `free`, `labels`, `lbound`, and `ubound` are expanded to accommodate the specification a random intercept.
 #' @param free A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If NULL, all regression effects are freely estimated. If not NULL, the matrix must have the same dimensions as `startvalues`.
@@ -12,10 +12,9 @@
 #' @param lbound A matrix of numeric values that indicates the lower bounds for each parameter. Optional. If NULL, no bounds are imposed. If not NULL, the matrix must have the same dimensions as `startvalues`.
 #' @param ubound A matrix of numeric values that indicates the upper bounds for each parameter. Optional. If NULL, no bounds are imposed. If not NULL, the matrix must have the same dimensions as `startvalues`.
 #'
-#' @return A An `OpenMx` matrix object that is passed on to `step3()`.
+#' @return A An `OpenMx` matrix object that is enter into [step3()].
 #' @export
-#'
-#' @examples
+
 create_A <- function(step2output, startvalues,
                      random_intercept = FALSE, free = NULL,
                      labels = NULL, lbound = NULL, ubound = NULL){

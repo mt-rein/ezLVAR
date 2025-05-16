@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_A.R
 \name{create_A}
 \alias{create_A}
-\title{Title}
+\title{Creates a Regression Effects Matrix}
 \usage{
 create_A(
   step2output,
@@ -10,13 +10,29 @@ create_A(
   random_intercept = FALSE,
   free = NULL,
   labels = NULL,
-  lbound = NA,
-  ubound = NA
+  lbound = NULL,
+  ubound = NULL
 )
 }
 \arguments{
-\item{ubound}{}
+\item{step2output}{The output obtained with the \code{\link[=step2]{step2()}} function.}
+
+\item{startvalues}{A matrix that represents the starting values. Must have the same dimensions as \code{free}, \code{labels}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
+
+\item{random_intercept}{Logical. If TRUE, the matrices \code{startvalues}, \code{free}, \code{labels}, \code{lbound}, and \code{ubound} are expanded to accommodate the specification a random intercept.}
+
+\item{free}{A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If NULL, all regression effects are freely estimated. If not NULL, the matrix must have the same dimensions as \code{startvalues}.}
+
+\item{labels}{A matrix of strings that indicates the labels for each parameter. Optional. If NULL, labels will be automatically generated. If not NULL, the matrix must have the same dimensions as \code{startvalues}.}
+
+\item{lbound}{A matrix of numeric values that indicates the lower bounds for each parameter. Optional. If NULL, no bounds are imposed. If not NULL, the matrix must have the same dimensions as \code{startvalues}.}
+
+\item{ubound}{A matrix of numeric values that indicates the upper bounds for each parameter. Optional. If NULL, no bounds are imposed. If not NULL, the matrix must have the same dimensions as \code{startvalues}.}
+}
+\value{
+A An \code{OpenMx} matrix object that is enter into \code{\link[=step3]{step3()}}.
 }
 \description{
-Title
+This is a helper function to create the A matrix, which is required to specify the structural model for \code{\link[=step3]{step3()}}.
+The A matrix describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects.
 }

@@ -1,6 +1,6 @@
 #' Step 2: Obtain Factor Scores
 #' @description
-#' This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to `step3()`.
+#' This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to [step3()].
 #'
 #' @param step1output The output obtained with the `step1()` function.
 #'

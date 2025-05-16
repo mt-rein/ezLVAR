@@ -2,12 +2,12 @@
 #'
 #' @description
 #' This function performs Step 3 of 3S-LVAR: Estimate the Structural Model using the factor scores as single indicators while accounting for their inherent uncertainty.
-#' The estimation is implemented in the State Space Model framework in OpenMx.
+#' The estimation is implemented in the State Space Model framework in `OpenMx`.
 #'
 #' @param step2output The output obtained with the `step2()` function.
 #' @param id A string containing the name of the ID variable.
-#' @param A An `OpenMx` matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See [?OpenMx::mxExpectationStateSpace]. The helper function `create_A()` is available to create this object.
-#' @param Q An `OpenMx` matrix object that describes the innovation (co)variance matrix. See `?mxExpectationStateSpace`. The helper function `create_Q()` is available to create this object.
+#' @param A An `OpenMx` matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See [OpenMx::mxExpectationStateSpace]. The helper function [create_A()] is available to create this object.
+#' @param Q An `OpenMx` matrix object that describes the innovation (co)variance matrix. See [OpenMx::mxExpectationStateSpace]. The helper function [create_Q()] is available to create this object.
 #' @param B An `OpenMx` matrix object that describes the covariate effects on the latent variables. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.
 #' @param D An `OpenMx` matrix object that describes the covariate effects on the observed items. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.
 #' @param x0 An `OpenMx` matrix object that describes the initial latent variable vector that initiates the Kalman Filter. Optional. If NULL, an object is automatically created where all values are fixed to 0.

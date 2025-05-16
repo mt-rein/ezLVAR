@@ -22,17 +22,32 @@ step3(
 
 \item{id}{A string containing the name of the ID variable.}
 
-\item{A}{An OpenMx matrix object that describes the time regressive coefficients in the state-transition model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See \code{?mxExpectationStateSpace}. Optional. If NULL, the function will automatically create a matrix that comprises all possible auto- and cross-regressive effects.}
+\item{A}{An \code{OpenMx} matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \code{\link[=create_A]{create_A()}} is available to create this object.}
 
-\item{Q}{An OpenMx matrix object that describes the innovation (co)variance matrix. See \code{?mxExpectationStateSpace}. Optional. If NULL, the function will automatically create a matrix that comprises all possible innovation (co)variances.}
+\item{Q}{An \code{OpenMx} matrix object that describes the innovation (co)variance matrix. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \code{\link[=create_Q]{create_Q()}} is available to create this object.}
+
+\item{B}{An \code{OpenMx} matrix object that describes the covariate effects on the latent variables. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.}
+
+\item{D}{An \code{OpenMx} matrix object that describes the covariate effects on the observed items. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.}
+
+\item{x0}{An \code{OpenMx} matrix object that describes the initial latent variable vector that initiates the Kalman Filter. Optional. If NULL, an object is automatically created where all values are fixed to 0.}
+
+\item{P0}{An \code{OpenMx} matrix object that describes the initial error covariance matrix that initiates the Kalman Filter. Optional. If NULL, a matrix will be automatically created. The parameters are freely estimated, with large starting values (100 for the diagonal and 10 for the off-diagonal).}
+
+\item{u}{An \code{OpenMx} matrix object that indicates the covariates. Required if \code{B} or \code{D} are included. If NULL, an object with no covariates is automatically created.}
 
 \item{step3group}{A string containing the name of the grouping variable for the structural model.}
-
-\item{random_intercept}{Logical. Should random intercepts for the latent variables be included?}
 }
 \value{
-loremipsum
+A list containing the following elements:
+
+\code{data} The data set which served as input.
+
+\code{estimates} A vector that includes the parameter estimates.
+
+\code{model} The fitted model (an OpenMx object).
 }
 \description{
-This function performs Step 3 of 3S-LVAR: Estimate the Structural Model using the factor scores as single indicators while accounting for their inherent uncertainty. It is a wrapper
+This function performs Step 3 of 3S-LVAR: Estimate the Structural Model using the factor scores as single indicators while accounting for their inherent uncertainty.
+The estimation is implemented in the State Space Model framework in \code{OpenMx}.
 }
