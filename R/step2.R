@@ -34,17 +34,18 @@ step2 <- function(step1output){
   if(is.list(measurementmodel)){
     for(m in 1:M){
       # if there are measurement blocks, compute factor scores in each block
-      temp <- lavaan::lavPredict(fit_step1[[m]], assemble = TRUE, append.data = TRUE) |>
+      temp <- lavaan::lavPredict(fit_step1[[m]], assemble = TRUE) |>
         as.data.frame()
       # and append to original data
-      data <- dplyr::full_join(data, temp, by = c(group, indicators[indicators %in% colnames(temp)]))
+      data[, factors[m]] <- temp[factors[m]]
+
     }
   } else {
     # if there are no measurement blocks, compute factor scores for all latent
     # variables simultaneously and append to data
-    temp <- lavaan::lavPredict(fit_step1, assemble = TRUE, append.data = TRUE) |>
+    temp <- lavaan::lavPredict(fit_step1, assemble = TRUE) |>
       as.data.frame()
-    data <- dplyr::full_join(data, temp, by = c(group, indicators))
+    data[, factors] <- tem[, factors]
   }
 
   #### compute lambda_star and theta_star (no grouping variable) ####
