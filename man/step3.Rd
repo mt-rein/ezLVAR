@@ -14,7 +14,8 @@ step3(
   x0 = NULL,
   P0 = NULL,
   u = NULL,
-  step3group = NULL
+  step3group = NULL,
+  newdata = NULL
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ step3(
 \item{u}{An \code{OpenMx} matrix object that indicates the covariates. Required if \code{B} or \code{D} are included. If NULL, an object with no covariates is automatically created.}
 
 \item{step3group}{A string containing the name of the grouping variable for the structural model.}
+
+\item{newdata}{A data frame. Note that the output of \code{step2()} already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers).}
 }
 \value{
 A list containing the following elements:
