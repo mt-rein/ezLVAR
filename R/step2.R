@@ -18,7 +18,7 @@
 step2 <- function(step1output){
   ## Preparations
   fit_step1 <- step1output$MMoutput
-  data <- step1output$data |> as.data.frame()
+  data <- step1output$data
   measurementmodel <- step1output$measurementmodel
   indicators <- lavaan::lavNames(lavaan::lavaanify(measurementmodel), "ov")
   factors <- lavaan::lavNames(lavaan::lavaanify(measurementmodel), "lv")
@@ -37,7 +37,7 @@ step2 <- function(step1output){
       temp <- lavaan::lavPredict(fit_step1[[m]], assemble = TRUE) |>
         as.data.frame()
       # and append to original data
-      data[, factors[m]] <- temp[factors[m]]
+      data[factors[m]] <- temp[factors[m]]
 
     }
   } else {
@@ -45,7 +45,7 @@ step2 <- function(step1output){
     # variables simultaneously and append to data
     temp <- lavaan::lavPredict(fit_step1, assemble = TRUE) |>
       as.data.frame()
-    data[, factors] <- tem[, factors]
+    data[factors] <- temp[factors]
   }
 
   #### compute lambda_star and theta_star (no grouping variable) ####
@@ -97,7 +97,7 @@ step2 <- function(step1output){
   #### compute lambda_star and theta_star (with grouping variable) ####
   if(!purrr::is_empty(group)){
     # how many groups?
-    G <- length(unique(data[, group]))
+    G <- length(unique(data[[group]]))
 
     # create empty matrices to store values.
     # One row per group, one column per factor

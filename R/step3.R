@@ -49,7 +49,7 @@ step3 <- function(step2output, id, A, Q,
   factors_ind <- paste0(factors, "_ind")                                        # names of factor score variables (single indicators)
   n_factors <- length(factors)
   step1group <- step2output$other$step1group                                    # name of the grouping variable in step1
-  unique_ids <- unique(data[, id])                                              # vector of unique ids
+  unique_ids <- data[[id]] |> unique()                                          # vector of unique ids
   N <- length(unique_ids)
 
   #### 2) data manipulation ####
@@ -154,7 +154,7 @@ step3 <- function(step2output, id, A, Q,
     for(i in unique_ids){
       # which step1 group (if any) does the individual belong to?
       if(!purrr::is_empty(step1group)){
-        s1g <- data[data[, id] == i, step1group] |> unique()
+        s1g <- data[data[[id]] == i, step1group] |> dplyr::pull() |> unique()
       } else {
         s1g <- 1
       }
@@ -197,7 +197,7 @@ step3 <- function(step2output, id, A, Q,
                                                                                'Q', 'R', 'x0', 'P0',
                                                                                'u'),
                                                OpenMx::mxFitFunctionML(),
-                                               OpenMx::mxData(data[data[, id] == i,],
+                                               OpenMx::mxData(data[data[[id]] == i,],
                                                               'raw'))
     }
     names(personmodel_list) <- personmodelnames
@@ -215,13 +215,18 @@ step3 <- function(step2output, id, A, Q,
 
   ## if there is a grouping variable in step 3
   if(!purrr::is_empty(step3group)){
+    if(!is.character(data[[group]])){
+      warning("Your grouping variable has been transformed into a character.")
+      data[group] <- as.character(data[[group]])
+    }
+
     # create a list of models (one for each individual) for each latent class:
     personmodelnames <- paste0("id_", unique_ids)
     names(personmodelnames) <- unique_ids
 
     personmodel_list <- vector(mode = "list", length = N)
     # create the person-models:
-    for(g in unique(data[, step3group])){
+    for(g in unique(data[[step3group]])){
       group_ids <- unique(data[data[, step3group] == g, id])
       for(i in group_ids){
         if(!purrr::is_empty(step1group)){
