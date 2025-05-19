@@ -14,5 +14,5 @@ Imports:
     OpenMx,
     purrr
 Depends: 
-    R (>= 3.5)
+    R (>= 4.1.0)
 LazyData: true
