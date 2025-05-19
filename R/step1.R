@@ -32,10 +32,15 @@ step1 <- function(data, measurementmodel, group = NULL,
     }
   }
 
-  if(!is.character(data[[group]])){
-    warning("Your grouping variable has been transformed into a character.")
-    data[group] <- as.character(data[[group]])
+  if(!is.null(group)){
+    if(!is.character(data[[group]])){
+      warning("Your grouping variable has been transformed into a character.")
+      data[group] <- data[[group]] |> as.character()
+    }
   }
+
+  data <- data |> as.data.frame()
+  # there are known issues when the input data are a tibble, so we transform it into a plain data frame
 
   # Are there measurement blocks in the MM?
   if(is.list(measurementmodel)){

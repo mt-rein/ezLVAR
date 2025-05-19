@@ -43,6 +43,9 @@ step3 <- function(step2output, id, A, Q,
     data <- newdata
   }
 
+  data <- data |> as.data.frame()
+  # there are known issues when the supplied data are a tibble, so we transform it into a plain data.frame
+
   lambda_star <- step2output$lambda_star
   theta_star <- step2output$theta_star
   factors <- step2output$other$factors
@@ -151,10 +154,11 @@ step3 <- function(step2output, id, A, Q,
     names(personmodelnames) <- unique_ids
 
     personmodel_list <- vector(mode = "list", length = N)
+    names(personmodel_list) <- unique_ids
     for(i in unique_ids){
       # which step1 group (if any) does the individual belong to?
       if(!purrr::is_empty(step1group)){
-        s1g <- data[data[[id]] == i, step1group] |> dplyr::pull() |> unique()
+        s1g <- data[data[[id]] == i, step1group] |> unique()
       } else {
         s1g <- 1
       }
@@ -189,7 +193,7 @@ step3 <- function(step2output, id, A, Q,
 
       # create the model
       modelname <- personmodelnames[i]  |> as.character()
-      dat_person <- data[data[[id]] == i,] |> as.data.frame()
+      dat_person <- data[data[[id]] == i,]
       personmodel_list[[i]] <- OpenMx::mxModel(name = modelname,
                                                A, B, C, D,
                                                Q, R, x0, P0,
@@ -201,7 +205,6 @@ step3 <- function(step2output, id, A, Q,
                                                OpenMx::mxData(dat_person,
                                                               'raw'))
     }
-    names(personmodel_list) <- personmodelnames
 
     # combine the person-models to a multi-subject model
     fullmodel <- OpenMx::mxModel("fullmodel",
@@ -218,7 +221,7 @@ step3 <- function(step2output, id, A, Q,
   if(!purrr::is_empty(step3group)){
     if(!is.character(data[[step3group]])){
       warning("Your grouping variable has been transformed into a character.")
-      data[step3group] <- as.character(data[[step3group]])
+      data[step3group] <- data[[step3group]] |> as.character()
     }
 
     # create a list of models (one for each individual) for each latent class:
@@ -228,10 +231,10 @@ step3 <- function(step2output, id, A, Q,
     personmodel_list <- vector(mode = "list", length = N)
     # create the person-models:
     for(g in unique(data[[step3group]])){
-      group_ids <- data[data[[step3group]] == g, id] |> dplyr::pull() |> unique()
+      group_ids <- data[data[[step3group]] == g, id] |> unique()
       for(i in group_ids){
         if(!purrr::is_empty(step1group)){
-          s1g <- data[data[[id]] == i, step1group] |> dplyr::pull() |> unique()
+          s1g <- data[data[[id]] == i, step1group] |> unique()
         } else {
           s1g <- 1
         }
@@ -265,7 +268,7 @@ step3 <- function(step2output, id, A, Q,
         )
 
         modelname <- personmodelnames[i]  |> as.character()
-        dat_person <- data[data[[id]] == i,] |> as.data.frame()
+        dat_person <- data[data[[id]] == i,]
         temp_model <- OpenMx::mxModel(name = modelname,
                                       A, B, C, D,
                                       Q, R, x0, P0,
