@@ -189,6 +189,7 @@ step3 <- function(step2output, id, A, Q,
 
       # create the model
       modelname <- personmodelnames[i]  |> as.character()
+      dat_person <- data[data[[id]] == i,] |> as.data.frame()
       personmodel_list[[i]] <- OpenMx::mxModel(name = modelname,
                                                A, B, C, D,
                                                Q, R, x0, P0,
@@ -197,7 +198,7 @@ step3 <- function(step2output, id, A, Q,
                                                                                'Q', 'R', 'x0', 'P0',
                                                                                'u'),
                                                OpenMx::mxFitFunctionML(),
-                                               OpenMx::mxData(data[data[[id]] == i,],
+                                               OpenMx::mxData(dat_person,
                                                               'raw'))
     }
     names(personmodel_list) <- personmodelnames
@@ -215,9 +216,9 @@ step3 <- function(step2output, id, A, Q,
 
   ## if there is a grouping variable in step 3
   if(!purrr::is_empty(step3group)){
-    if(!is.character(data[[group]])){
+    if(!is.character(data[[step3group]])){
       warning("Your grouping variable has been transformed into a character.")
-      data[group] <- as.character(data[[group]])
+      data[step3group] <- as.character(data[[step3group]])
     }
 
     # create a list of models (one for each individual) for each latent class:
@@ -227,10 +228,10 @@ step3 <- function(step2output, id, A, Q,
     personmodel_list <- vector(mode = "list", length = N)
     # create the person-models:
     for(g in unique(data[[step3group]])){
-      group_ids <- unique(data[data[, step3group] == g, id])
+      group_ids <- data[data[[step3group]] == g, id] |> dplyr::pull() |> unique()
       for(i in group_ids){
         if(!purrr::is_empty(step1group)){
-          s1g <- data[data[, id] == i, step1group] |> unique()
+          s1g <- data[data[[id]] == i, step1group] |> dplyr::pull() |> unique()
         } else {
           s1g <- 1
         }
@@ -264,6 +265,7 @@ step3 <- function(step2output, id, A, Q,
         )
 
         modelname <- personmodelnames[i]  |> as.character()
+        dat_person <- data[data[[id]] == i,] |> as.data.frame()
         temp_model <- OpenMx::mxModel(name = modelname,
                                       A, B, C, D,
                                       Q, R, x0, P0,
@@ -272,7 +274,7 @@ step3 <- function(step2output, id, A, Q,
                                                                       'Q', 'R', 'x0', 'P0',
                                                                       'u'),
                                       OpenMx::mxFitFunctionML(),
-                                      OpenMx::mxData(data[data[, id] == i,],
+                                      OpenMx::mxData(dat_person,
                                                      'raw'))
         temp_model <- OpenMx::omxSetParameters(temp_model,
                                                labels = names(coef(temp_model)),
