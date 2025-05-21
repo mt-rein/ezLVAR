@@ -15,6 +15,7 @@
 #' @param u An `OpenMx` matrix object that indicates the covariates. Required if `B` or `D` are included. If NULL, an object with no covariates is automatically created.
 #' @param step3group A string containing the name of the grouping variable for the structural model.
 #' @param newdata A data frame. Note that the output of `step2()` already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers).
+#' @param tryhard Should the algorithm run multiple times to obtain a solution? (See [OpenMx::mxTryHard])
 #'
 #' @return A list containing the following elements:
 #'
@@ -33,7 +34,8 @@ step3 <- function(step2output, id, A, Q,
                   x0 = NULL, P0 = NULL,
                   u = NULL,
                   step3group = NULL,
-                  newdata = NULL){
+                  newdata = NULL,
+                  tryhard = FALSE){
 
   #### 1) Preparations ####
   ## extract objects from step 1 output:
@@ -216,7 +218,11 @@ step3 <- function(step2output, id, A, Q,
                                  personmodel_list,
                                  OpenMx::mxFitFunctionMultigroup(personmodelnames))
     # fit the model
-    fullmodelr <- OpenMx::mxRun(fullmodel)
+    if(tryhard){
+      fullmodelr <- OpenMx::mxTryHard(fullmodel)
+    } else {
+      fullmodelr <- OpenMx::mxRun(fullmodel)
+    }
   }
 
 
@@ -295,7 +301,12 @@ step3 <- function(step2output, id, A, Q,
 
     fullmodel <- OpenMx::mxModel("fullmodel", personmodel_list,
                                  OpenMx::mxFitFunctionMultigroup(personmodelnames))
-    fullmodelr <- OpenMx::mxRun(fullmodel)
+    if(tryhard){
+      fullmodelr <- OpenMx::mxTryHard(fullmodel)
+    } else {
+      fullmodelr <- OpenMx::mxRun(fullmodel)
+    }
+
   }
 
 

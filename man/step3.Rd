@@ -15,7 +15,8 @@ step3(
   P0 = NULL,
   u = NULL,
   step3group = NULL,
-  newdata = NULL
+  newdata = NULL,
+  tryhard = FALSE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ step3(
 \item{step3group}{A string containing the name of the grouping variable for the structural model.}
 
 \item{newdata}{A data frame. Note that the output of \code{step2()} already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers).}
+
+\item{tryhard}{Should the algorithm run multiple times to obtain a solution? (See \link[OpenMx:mxTryHard]{OpenMx::mxTryHard})}
 }
 \value{
 A list containing the following elements:
