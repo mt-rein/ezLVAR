@@ -21,25 +21,25 @@ create_A <- function(step2output, startvalues,
 
   # Checks:
   if(!is.null(free)){
-    if(dim(startvalues) != dim(free)){
+    if(any(dim(startvalues) != dim(free))){
       stop("The free matrix must have the same dimensions as the startvalues matrix.")
     }
   }
 
   if(!is.null(labels)){
-    if(dim(startvalues) != dim(labels)){
+    if(any(dim(startvalues) != dim(labels))){
       stop("The labels matrix must have the same dimensions as the startvalues matrix.")
     }
   }
 
   if(!is.null(lbound)){
-    if(dim(startvalues) != dim(lbound)){
+    if(any(dim(startvalues) != dim(lbound))){
       stop("The lbound matrix must have the same dimensions as the startvalues matrix.")
     }
   }
 
   if(!is.null(ubound)){
-    if(dim(startvalues) != dim(ubound)){
+    if(any(dim(startvalues) != dim(ubound))){
       stop("The ubound matrix must have the same dimensions as the startvalues matrix.")
     }
   }
