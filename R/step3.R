@@ -46,6 +46,11 @@ step3 <- function(step2output, id, A, Q,
   data <- data |> as.data.frame()
   # there are known issues when the supplied data are a tibble, so we transform it into a plain data.frame
 
+  if(!is.character(data[[id]])){
+    warning("Your id variable has been transformed into a character.")
+    data[id] <- data[[id]] |> as.character()
+  }
+
   lambda_star <- step2output$lambda_star
   theta_star <- step2output$theta_star
   factors <- step2output$other$factors
@@ -229,6 +234,7 @@ step3 <- function(step2output, id, A, Q,
     names(personmodelnames) <- unique_ids
 
     personmodel_list <- vector(mode = "list", length = N)
+    names(personmodel_list) <- unique_ids
     # create the person-models:
     for(g in unique(data[[step3group]])){
       group_ids <- data[data[[step3group]] == g, id] |> unique()
@@ -286,8 +292,6 @@ step3 <- function(step2output, id, A, Q,
         personmodel_list[[i]] <- temp_model
       }
     }
-
-    names(personmodel_list) <- personmodelnames
 
     fullmodel <- OpenMx::mxModel("fullmodel", personmodel_list,
                                  OpenMx::mxFitFunctionMultigroup(personmodelnames))
