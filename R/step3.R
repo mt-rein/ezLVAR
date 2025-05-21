@@ -198,7 +198,7 @@ step3 <- function(step2output, id, A, Q,
 
       # create the model
       modelname <- personmodelnames[i]  |> as.character()
-      dat_person <- data[data[[id]] == i,]
+      dat_person <- data[data[[id]] == i, factors_ind]
       personmodel_list[[i]] <- OpenMx::mxModel(name = modelname,
                                                A, B, C, D,
                                                Q, R, x0, P0,
@@ -274,7 +274,7 @@ step3 <- function(step2output, id, A, Q,
         )
 
         modelname <- personmodelnames[i]  |> as.character()
-        dat_person <- data[data[[id]] == i,]
+        dat_person <- data[data[[id]] == i, factors_ind]
         temp_model <- OpenMx::mxModel(name = modelname,
                                       A, B, C, D,
                                       Q, R, x0, P0,
