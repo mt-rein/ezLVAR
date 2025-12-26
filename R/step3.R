@@ -16,7 +16,7 @@
 #' @param mixture Logical. If TRUE, a mixture model is applied.
 #' @param n_clusters Numerical. The number of clusters (required if mixture = TRUE).
 #' @param n_starts Numerical. The total number of random starts.
-#' @param n_best_starts Numerical. The number of starts that are completed until convergence.
+#' @param n_best_starts Numerical. The number of starts that are completed until convergence in Phase 2.
 #' @param maxit_phase1 Numerical. The maximum number of iterations in Phase 1.
 #' @param maxit_phase2 Numerical. The maximum number of iterations in Phase 2.
 #' @param stablecluster_criterion Numerical. If the average change in the posterior probabilities across persons after the E-Step in Phase 1 is smaller than this value, the clustering is considered stable.
@@ -33,12 +33,10 @@
 #' @returns `data` The data set which served as input.
 #' @returns If mixture modeling is used, the list also contains the following elements:
 #' @returns `loglik` The observed data log likelihood of the best model.
-#' @returns `posterior_probabilities` A matrix with the posterior probabilities per person per cluster.
-#' @returns `modal_clustermemberships` A vector that represents the modal cluster membership for each individual (i.e., for which cluster they have the highest posterior probability).
+#' @returns `posterior_probabilities` A data.frame with the posterior probabilities per person per cluster, and their modal cluster assignment (i.e., for which cluster they have the highest posterior probability).
 #' @returns `class_proportions` The class proportions (prior probabilities).
-#' @returns `nonconveged_starts` The number of random starts that did not converge.
+#' @returns `n_nonconveged` The number of starts that did not converge in Phase 2.
 #' @returns `seeds` A vector containing the seeds per random start.
-#' @returns `best_start` The number of the best random start.
 #' @returns `best_seed` The seed of the best random start.
 #'
 #' @export
@@ -58,6 +56,8 @@ step3 <- function(step2output, A, Q,
                   stablecluster_criterion = .1,
                   convergence_criterion = 1e-6,
                   GEM_iterations = 3,
+                  parallel = FALSE,
+                  n_cores = NULL,
                   seeds = NULL,
                   newdata = NULL,
                   tryhard = FALSE,
@@ -300,63 +300,159 @@ step3 <- function(step2output, A, Q,
   # after a stable clustering is achieved, a final precise M-Step is performed
   # Then, the n_best_starts best starts are completed
   if (mixture) {
+    # provide seeds for the multiple starts (for replicability)
+    if (is.null(seeds)) {
+      seeds <- sample.int(.Machine$integer.max, n_starts)
+    }
+    input_phase1 <- lapply(seeds, function(s) list(seed = s))
+
     ## run Phase 1 (Generalized EM for all starts):
     if (verbose) {
       message(glue::glue("==== Starting Phase 1 with {n_starts} starts. ===="))
     }
-    output_phase1 <- mixture_phase1(personmodel_list = personmodel_list,
-                                    n_clusters = n_clusters,
-                                    n_factors = n_factors,
-                                    n_persons = n_persons,
-                                    n_starts = n_starts,
-                                    stablecluster_criterion = stablecluster_criterion,
-                                    GEM_iterations = GEM_iterations,
-                                    seeds = seeds,
-                                    maxit = maxit_phase1,
-                                    verbose = verbose)
+
+    if(parallel) {
+      # add number of cores if not specified:
+      if (is.null(n_cores)) {
+        n_cores = parallel::detectCores() - 2
+      }
+
+      # create cluster:
+      backend <- parabar::start_backend(n_cores, cluster_type = "psock", backend_type = "async")
+
+      # add variables to cluster:
+      parabar::export(backend,
+                      variables = c(
+                        "personmodel_list", "n_clusters", "n_factors", "n_persons",
+                        "stablecluster_criterion", "convergence_criterion",
+                        "GEM_iterations", "maxit_phase1"
+                      ))
+
+      # run random starts in parallel:
+      results_phase1 <- parabar::par_lapply(backend,
+                                            input_phase1,
+                                            run_start,
+                                            personmodel_list = personmodel_list,
+                                            n_clusters = n_clusters,
+                                            n_factors = n_factors,
+                                            n_persons = n_persons,
+                                            phase = 1,
+                                            stablecluster_criterion = stablecluster_criterion,
+                                            convergence_criterion = convergence_criterion,
+                                            GEM_iterations = GEM_iterations,
+                                            maxit = maxit_phase1,
+                                            verbose = FALSE)
+
+      # close cluster:
+      parabar::stop_backend(backend)
+    } else {
+      results_phase1 <- lapply(input_phase1,
+                               run_start,
+                               personmodel_list = personmodel_list,
+                               n_clusters = n_clusters,
+                               n_factors = n_factors,
+                               n_persons = n_persons,
+                               phase = 1,
+                               stablecluster_criterion = stablecluster_criterion,
+                               convergence_criterion = convergence_criterion,
+                               GEM_iterations = GEM_iterations,
+                               maxit = maxit_phase1,
+                               verbose = verbose)
+    }
 
     if (verbose) {
-      message(glue::glue(" ==== Phase 1 finished.",
+      message(glue::glue("==== Phase 1 finished.",
                          "Proceeding to Phase 2 with {n_best_starts} starts. ===="))
     }
 
     # run Phase 2 (full EM for the best starts):
-    output_phase2 <- mixture_phase2(output_phase1,
-                                    personmodel_list = personmodel_list,
-                                    n_clusters = n_clusters,
-                                    n_factors = n_factors,
-                                    n_persons = n_persons,
-                                    n_best_starts = n_best_starts,
-                                    convergence_criterion = convergence_criterion,
-                                    maxit = maxit_phase2,
-                                    verbose = verbose)
+    top_starts <- results_phase1 |>
+      purrr::map_dbl(~ .x$observed_data_LL) |>
+      order(decreasing = TRUE) |>
+      head(n_best_starts)
+
+    input_phase2 <- results_phase1[top_starts]
+
+    if(parallel) {
+      # create cluster:
+      backend <- parabar::start_backend(n_cores, cluster_type = "psock", backend_type = "async")
+
+      # add variables to cluster:
+      parabar::export(backend,
+                      variables = c(
+                        "personmodel_list", "n_clusters", "n_factors", "n_persons",
+                        "stablecluster_criterion", "convergence_criterion",
+                        "GEM_iterations", "maxit_phase1"
+                      ))
+
+      # run random starts in parallel:
+      results_phase2 <- parabar::par_lapply(backend,
+                                            input_phase2,
+                                            run_start,
+                                            personmodel_list = personmodel_list,
+                                            n_clusters = n_clusters,
+                                            n_factors = n_factors,
+                                            n_persons = n_persons,
+                                            phase = 2,
+                                            stablecluster_criterion = stablecluster_criterion,
+                                            convergence_criterion = convergence_criterion,
+                                            GEM_iterations = GEM_iterations,
+                                            maxit = maxit_phase2,
+                                            verbose = FALSE)
+
+      # close cluster:
+      parabar::stop_backend(backend)
+    } else {
+      results_phase2 <- lapply(input_phase2,
+                               run_start,
+                               personmodel_list = personmodel_list,
+                               n_clusters = n_clusters,
+                               n_factors = n_factors,
+                               n_persons = n_persons,
+                               phase = 2,
+                               stablecluster_criterion = stablecluster_criterion,
+                               convergence_criterion = convergence_criterion,
+                               GEM_iterations = GEM_iterations,
+                               maxit = maxit_phase2,
+                               verbose = verbose)
+    }
+
+    if (verbose) {
+      message(glue::glue("==== Phase 2 finished. ===="))
+    }
+
+    # select best model:
+    best_start <- results_phase2 |>
+      purrr::map_dbl(~ .x$observed_data_LL) |>
+      order(decreasing = TRUE) |>
+      head(1)
+
+    selected_start <- results_phase2[[best_start]]
+
 
     ## build output
-    estimates <- purrr::map(output_phase2$best_model, coef)
-    best_model = output_phase2$best_model
-    loglik <- output_phase2$best_loglik
-    post <- as.data.frame(output_phase2$best_post) |> round(3)
-    rownames(post) <- unique_ids
+    estimates <- selected_start$clustermodels_run |>
+      purrr::map(coef)
+    best_model <- selected_start$clustermodels_run
+    loglik <- selected_start$observed_data_LL
+    post <- as.data.frame(selected_start$post) |> round(3)
     colnames(post) <- paste0("cluster", 1:n_clusters)
-    modal_clustermembership <- apply(post, 1, function(x) names(x)[which.max(x)])
-    names(modal_clustermembership) <- rownames(post)
-    class_proportions <- colMeans(post) |> round(3)
-    nonconverged_starts <- output_phase2$nonconverged_starts
-    seeds <- output_phase1 |> purrr::map_dbl(~ .x[["seed"]])
-    best_start <- output_phase2$best_startnumber
-    best_seed <- output_phase2$best_seed
+    post$modal <- apply(post, 1, function(x) names(x)[which.max(x)])
+    post <- post |> tibble::add_column(!!id_var := unique_ids, .before = 1)
+    class_proportions <- selected_start$class_proportions |> round(3)
+    convergence_counter <- results_phase2 |>
+      purrr::map_lgl(~ .x$converged)
+    n_nonconverged <- sum(!convergence_counter)
+    best_seed <- selected_start$seed
     output <- list("estimates" = estimates,
                    "model" = best_model,
                    "data" = data,
                    "loglik" = loglik,
                    "posterior_probabilities" = post,
-                   "modal_clustermembership" = modal_clustermembership,
                    "class_proportions" = class_proportions,
-                   "nonconverged_starts" = nonconverged_starts,
+                   "n_nonconverged" = n_nonconverged,
                    "seeds" = seeds,
-                   "best_start" = best_start,
                    "best_seed" = best_seed)
-
   }
 
   return(output)

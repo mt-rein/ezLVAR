@@ -23,6 +23,8 @@ step3(
   stablecluster_criterion = 0.1,
   convergence_criterion = 1e-06,
   GEM_iterations = 3,
+  parallel = FALSE,
+  n_cores = NULL,
   seeds = NULL,
   newdata = NULL,
   tryhard = FALSE,
@@ -54,7 +56,7 @@ step3(
 
 \item{n_starts}{Numerical. The total number of random starts.}
 
-\item{n_best_starts}{Numerical. The number of starts that are completed until convergence.}
+\item{n_best_starts}{Numerical. The number of starts that are completed until convergence in Phase 2.}
 
 \item{maxit_phase1}{Numerical. The maximum number of iterations in Phase 1.}
 
@@ -87,17 +89,13 @@ If mixture modeling is used, the list also contains the following elements:
 
 \code{loglik} The observed data log likelihood of the best model.
 
-\code{posterior_probabilities} A matrix with the posterior probabilities per person per cluster.
-
-\code{modal_clustermemberships} A vector that represents the modal cluster membership for each individual (i.e., for which cluster they have the highest posterior probability).
+\code{posterior_probabilities} A data.frame with the posterior probabilities per person per cluster, and their modal cluster assignment (i.e., for which cluster they have the highest posterior probability).
 
 \code{class_proportions} The class proportions (prior probabilities).
 
-\code{nonconveged_starts} The number of random starts that did not converge.
+\code{n_nonconveged} The number of starts that did not converge in Phase 2.
 
 \code{seeds} A vector containing the seeds per random start.
-
-\code{best_start} The number of the best random start.
 
 \code{best_seed} The seed of the best random start.
 }
