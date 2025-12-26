@@ -6,7 +6,6 @@
 \usage{
 step3(
   step2output,
-  id,
   A,
   Q,
   B = NULL,
@@ -14,19 +13,28 @@ step3(
   x0 = NULL,
   P0 = NULL,
   u = NULL,
-  step3group = NULL,
+  group_var = NULL,
+  mixture = FALSE,
+  n_clusters = NULL,
+  n_starts = 25,
+  n_best_starts = 5,
+  maxit_phase1 = 100,
+  maxit_phase2 = 100,
+  stablecluster_criterion = 0.1,
+  convergence_criterion = 1e-06,
+  GEM_iterations = 3,
+  seeds = NULL,
   newdata = NULL,
-  tryhard = FALSE
+  tryhard = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
 \item{step2output}{The output obtained with the \code{step2()} function.}
 
-\item{id}{A string containing the name of the ID variable.}
-
 \item{A}{An \code{OpenMx} matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \code{\link[=create_A]{create_A()}} is available to create this object.}
 
-\item{Q}{An \code{OpenMx} matrix object that describes the innovation (co)variance matrix. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \code{\link[=create_Q]{create_Q()}} is available to create this object.}
+\item{Q}{An \code{OpenMx} matrix object that describes the innovation covariance matrix. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \code{\link[=create_Q]{create_Q()}} is available to create this object.}
 
 \item{B}{An \code{OpenMx} matrix object that describes the covariate effects on the latent variables. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.}
 
@@ -38,20 +46,60 @@ step3(
 
 \item{u}{An \code{OpenMx} matrix object that indicates the covariates. Required if \code{B} or \code{D} are included. If NULL, an object with no covariates is automatically created.}
 
-\item{step3group}{A string containing the name of the grouping variable for the structural model.}
+\item{group_var}{A string containing the name of the grouping variable for the structural model.}
+
+\item{mixture}{Logical. If TRUE, a mixture model is applied.}
+
+\item{n_clusters}{Numerical. The number of clusters (required if mixture = TRUE).}
+
+\item{n_starts}{Numerical. The total number of random starts.}
+
+\item{n_best_starts}{Numerical. The number of starts that are completed until convergence.}
+
+\item{maxit_phase1}{Numerical. The maximum number of iterations in Phase 1.}
+
+\item{maxit_phase2}{Numerical. The maximum number of iterations in Phase 2.}
+
+\item{stablecluster_criterion}{Numerical. If the average change in the posterior probabilities across persons after the E-Step in Phase 1 is smaller than this value, the clustering is considered stable.}
+
+\item{convergence_criterion}{Numerical. If the change in the observed data log likelihood after the M-Step is smaller than this value, convergence is achieved.}
+
+\item{GEM_iterations}{The maximum number of iterations in OpenMx during the M-Step (when updating the model parameters) in Phase 1.}
+
+\item{seeds}{A numerical vector containing the starting seeds for each random start. Optional.}
 
 \item{newdata}{A data frame. Note that the output of \code{step2()} already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers).}
 
-\item{tryhard}{Should the algorithm run multiple times to obtain a solution? (See \link[OpenMx:mxTryHard]{OpenMx::mxTryHard})}
+\item{tryhard}{Should the algorithm run multiple times to obtain a solution (see \link[OpenMx:mxTryHard]{OpenMx::mxTryHard})? Does not work in conjunction with mixture modeling.}
+
+\item{verbose}{Logical (FALSE by default). If TRUE, print progress messages.}
 }
 \value{
 A list containing the following elements:
 
+\code{estimates} A vector that includes the parameter estimates. In the case of mixture modeling, a list of vectors (one for each cluster).
+
+\code{model} The fitted model (an OpenMx object). In the case of mixture modeling, a list of models (one for each cluster).
+
 \code{data} The data set which served as input.
 
-\code{estimates} A vector that includes the parameter estimates.
+If mixture modeling is used, the list also contains the following elements:
 
-\code{model} The fitted model (an OpenMx object).
+\code{loglik} The observed data log likelihood of the best model.
+
+\code{posterior_probabilities} A matrix with the posterior probabilities per person per cluster.
+
+\code{modal_clustermemberships} A vector that represents the modal cluster membership for each individual (i.e., for which cluster they have the highest posterior probability).
+
+\code{class_proportions} The class proportions (prior probabilities).
+
+\code{nonconveged_starts} The number of random starts that did not converge.
+
+\code{seeds} A vector containing the seeds per random start.
+
+\code{best_start} The number of the best random start.
+
+\code{best_seed} The seed of the best random start.
 }
 \description{
 This function performs Step 3 of 3S-LVAR: Estimate the Structural Model using the factor scores as single indicators while accounting for their inherent uncertainty.

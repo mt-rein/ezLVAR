@@ -8,69 +8,61 @@
 #' @param data A data frame.
 #' @param measurementmodel A string describing the measurement model using the `lavaan` syntax.
 #'                         Can be a list of strings determining the number of measurement blocks (e.g., one string for the MM of factor 1, and a second string for the MM of factor 2).
-#' @param group String containing the name of the grouping variable. Optional.
-#' @param invariances String containing the parameters constrained to equality across groups (cf. the `group.equal` argument in `lavaan`)
-#' @param partial_noninvariances String containing the non-invariances of the model (cf. the `group.partial` argument in `lavaan`). Must be a list of strings if `measurementmodel` is a list (e.g., one string for block 1, and a second string for block 2).
+#' @param id_var String containing the name of the ID variable.
+#' @param group_var String containing the name of the grouping variable. Optional.
+#' @param invariances Character vector containing the parameters constrained to equality across groups (cf. the `group.equal` argument in `lavaan`)
+#' @param partial_noninvariances Character vector containing the non-invariances of the model (cf. the `group.partial` argument in `lavaan`). Must be a list of strings if `measurementmodel` is a list (e.g., one string for block 1, and a second string for block 2).
 #' @param ... Arguments to be passed on to [lavaan::cfa()].
 #'
-#' @return A list comprising the output of the measurement model estimation (`MMoutput`), the original data set (`data`), and the measurement model (`measurement model`).
+#' @returns A list comprising the output of the measurement model estimation (`mm_output`), the original data set (`data`), the measurement model (`measurement model`), and the ID variable (`id_var`).
 #' @export
 
-step1 <- function(data, measurementmodel, group = NULL,
+step1 <- function(data, measurementmodel, id_var,
+                  group_var = NULL,
                   invariances = NULL,
-                  partial_noninvariances = NULL, ...){
+                  partial_noninvariances = NULL, ...) {
 
-  if(!is.null(partial_noninvariances)){
-    if(is.list(measurementmodel) & !is.list(partial_noninvariances)){
-      stop("If the measurement model uses blocks, then non-invariances also need to be defined in a list.")
-    }
+  #### Errors and Warnings ####
+  # ensure that both partial_noninvariances and measurementmodel are a list:
+  if (!is.null(partial_noninvariances) &&
+      is.list(measurementmodel) &&
+      !is.list(partial_noninvariances)) {
+    stop("If the measurement model uses blocks, then non-invariances also need to be defined in a list.")
   }
 
-  if(is.list(measurementmodel) & is.list(partial_noninvariances) & !is.null(partial_noninvariances)){
-    if(length(measurementmodel) != length(partial_noninvariances)){
-      stop("The number of elements in the lists for measurement model and partial_noninvariances must be equal.")
-    }
+  # ensure that both partial_noninvariances and measurementmodel are of the same length
+  if (is.list(measurementmodel) &&
+      is.list(partial_noninvariances) &&
+      length(measurementmodel) != length(partial_noninvariances)) {
+    stop("The number of elements in the lists for measurement model and partial_noninvariances must be equal.")
   }
 
-  if(!is.null(group)){
-    if(!is.character(data[[group]])){
-      warning("Your grouping variable has been transformed into a character.")
-      data[group] <- data[[group]] |> as.character()
-    }
+  #### Confirmatory Factor Analysis per block #####
+  # if there are no MM blocks defined, turn the MM into a list with a single MM block (to facilitate coding)
+  if (!is.list(measurementmodel)) {
+    measurementmodel <- list(measurementmodel)
+    partial_noninvariances <- list(partial_noninvariances)
   }
 
-  data <- data |> as.data.frame()
-  # there are known issues when the input data are a tibble, so we transform it into a plain data frame
+  # how many blocks?
+  n_blocks <- length(measurementmodel)
 
-  # Are there measurement blocks in the MM?
-  if(is.list(measurementmodel)){
-    # If there are measurement blocks, how many do we have?
-    M <- length(measurementmodel)
-
-    # create list, with elements equal to number of measurement blocks
-    MMoutput <- vector("list", length = M)
-    for(m in 1:M){
-      # estimate MM in each block
-      MMoutput[[m]] <- lavaan::cfa(measurementmodel[[m]],
-                                   data = data,
-                                   group = group,
-                                   group.equal = invariances,
-                                   group.partial = partial_noninvariances[[m]],
-                                   ...)
-    }
-  } else {
-    # if there are no measurement blocks, estimate full MM
-    MMoutput <- lavaan::cfa(measurementmodel,
-                            data = data,
-                            group = group,
-                            group.equal = invariances,
-                            group.partial = partial_noninvariances,
-                            ...)
+  mm_output <- vector("list", length = n_blocks)
+  # estimate MM in each block:
+  for (m in 1:n_blocks) {
+    mm_output[[m]] <- lavaan::cfa(measurementmodel[[m]],
+                                  data = data,
+                                  group = group_var,
+                                  meanstructure = TRUE,
+                                  group.equal = invariances,
+                                  group.partial = partial_noninvariances[[m]],
+                                  ...)
   }
 
   # assemble output
-  output <- list("MMoutput" = MMoutput,
+  output <- list("mm_output" = mm_output,
                  "data" = data,
-                 "measurementmodel" = measurementmodel)
+                 "measurementmodel" = measurementmodel,
+                 "id_var" = id_var)
   return(output)
 }

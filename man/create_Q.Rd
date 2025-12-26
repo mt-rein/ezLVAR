@@ -17,7 +17,7 @@ create_Q(
 \arguments{
 \item{step2output}{The output obtained with the \code{\link[=step2]{step2()}} function.}
 
-\item{startvalues}{A matrix that represents the starting values. Must have the same dimensions as \code{free}, \code{labels}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
+\item{startvalues}{A matrix that represents the starting values for each parameter. Must have the same dimensions as \code{free}, \code{labels}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
 
 \item{random_intercept}{Logical. If TRUE, the matrices \code{startvalues}, \code{free}, \code{labels}, \code{lbound}, and \code{ubound} are automatically expanded to accommodate the specification a random intercept.}
 

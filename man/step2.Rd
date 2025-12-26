@@ -14,11 +14,11 @@ A list containing the following elements:
 
 \code{data} The original data set with the appended factor scores.
 
-\code{lambda_star} The values for lambda* (by group, where applicable)
+\code{lambda_star} The values for lambda* per individual.
 
-\code{theta_star} The values for theta* (by group, where applicable)
+\code{theta_star} The values for theta* per individual.
 
-\code{other} A list containing information on the names of the \code{factors}, \code{indicators}, and the grouping variable of step 1 (\code{step1group}).
+\code{other} A list containing information on the names of the \code{factors}, \code{indicators}, and the ID variable (\code{id_var}).
 }
 \description{
 This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to \code{\link[=step3]{step3()}}.

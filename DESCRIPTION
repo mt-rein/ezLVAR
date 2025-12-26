@@ -7,7 +7,7 @@ Description: `ezLVAR` aids researchers in implementing the Three-Step Latent Vec
 License: CC BY 4.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports: 
     dplyr,
     lavaan,

@@ -17,9 +17,9 @@ create_A(
 \arguments{
 \item{step2output}{The output obtained with the \code{\link[=step2]{step2()}} function.}
 
-\item{startvalues}{A matrix that represents the starting values. Must have the same dimensions as \code{free}, \code{labels}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
+\item{startvalues}{A matrix that represents the starting values for each parameter. Must have the same dimensions as \code{free}, \code{labels}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
 
-\item{random_intercept}{Logical. If TRUE, the matrices \code{startvalues}, \code{free}, \code{labels}, \code{lbound}, and \code{ubound} are expanded to accommodate the specification a random intercept.}
+\item{random_intercept}{Logical. If TRUE, the matrices \code{startvalues}, \code{free}, \code{labels}, \code{lbound}, and \code{ubound} are expanded to accommodate the specification of a random intercept.}
 
 \item{free}{A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If NULL, all regression effects are freely estimated. If not NULL, the matrix must have the same dimensions as \code{startvalues}.}
 
