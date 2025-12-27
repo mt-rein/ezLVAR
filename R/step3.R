@@ -326,12 +326,13 @@ step3 <- function(step2output, A, Q,
                         "personmodel_list", "n_clusters", "n_factors", "n_persons",
                         "stablecluster_criterion", "convergence_criterion",
                         "GEM_iterations", "maxit_phase1"
-                      ))
+                      ),
+                      envir = environment())
 
       # run random starts in parallel:
       results_phase1 <- parabar::par_lapply(backend,
                                             input_phase1,
-                                            run_start,
+                                            ezLVAR:::run_start,
                                             personmodel_list = personmodel_list,
                                             n_clusters = n_clusters,
                                             n_factors = n_factors,
@@ -347,7 +348,7 @@ step3 <- function(step2output, A, Q,
       parabar::stop_backend(backend)
     } else {
       results_phase1 <- lapply(input_phase1,
-                               run_start,
+                               ezLVAR:::run_start,
                                personmodel_list = personmodel_list,
                                n_clusters = n_clusters,
                                n_factors = n_factors,
@@ -383,12 +384,13 @@ step3 <- function(step2output, A, Q,
                         "personmodel_list", "n_clusters", "n_factors", "n_persons",
                         "stablecluster_criterion", "convergence_criterion",
                         "GEM_iterations", "maxit_phase1"
-                      ))
+                      ),
+                      envir = environment())
 
       # run random starts in parallel:
       results_phase2 <- parabar::par_lapply(backend,
                                             input_phase2,
-                                            run_start,
+                                            ezLVAR:::run_start,
                                             personmodel_list = personmodel_list,
                                             n_clusters = n_clusters,
                                             n_factors = n_factors,
@@ -404,7 +406,7 @@ step3 <- function(step2output, A, Q,
       parabar::stop_backend(backend)
     } else {
       results_phase2 <- lapply(input_phase2,
-                               run_start,
+                               ezLVAR:::run_start,
                                personmodel_list = personmodel_list,
                                n_clusters = n_clusters,
                                n_factors = n_factors,
