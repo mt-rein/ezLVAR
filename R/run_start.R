@@ -55,8 +55,8 @@ run_start <- function(input_list,
     if (phase == 1 && it > 1) {
       post0 <- post
       # update posteriors:
-      post <- ezLVAR:::EStep(pi_ks = class_proportions, ngroup = n_persons,
-                             nclus = n_clusters, loglik = personLL)
+      post <- EStep(pi_ks = class_proportions, ngroup = n_persons,
+                    nclus = n_clusters, loglik = personLL)
 
       # compute (absolute) differences in posteriors
       delta <- abs(post - post0)
@@ -70,8 +70,8 @@ run_start <- function(input_list,
 
     if (phase == 2) {
       # update posteriors:
-      post <- ezLVAR:::EStep(pi_ks = class_proportions, ngroup = n_persons,
-                             nclus = n_clusters, loglik = personLL)
+      post <- EStep(pi_ks = class_proportions, ngroup = n_persons,
+                    nclus = n_clusters, loglik = personLL)
     }
 
     # compute class proportions:
@@ -81,12 +81,12 @@ run_start <- function(input_list,
     # get start values from the coefficients of previous iteration:
     if (phase == 2 | it > 1) {
       startvalues <- clustermodels_run |>
-        purrr::map(coef)
+        purrr::map(stats::coef)
     } else {
       # in the first iteration, generate random start values in each cluster
-      startvalues <- ezLVAR:::generate_startvalues(n_clusters = n_clusters,
-                                                   n_factors = n_factors,
-                                                   personmodel_list = personmodel_list)
+      startvalues <- generate_startvalues(n_clusters = n_clusters,
+                                          n_factors = n_factors,
+                                          personmodel_list = personmodel_list)
     }
 
 
@@ -138,8 +138,8 @@ run_start <- function(input_list,
     # openMx gives the minus2LL, so we divide by minus 2
 
     # compute observed-data log likelihood from person-wise LL:
-    observed_data_LL <- ezLVAR:::compute_observed_data_LL(personLL = personLL,
-                                                          class_proportions = class_proportions)
+    observed_data_LL <- compute_observed_data_LL(personLL = personLL,
+                                                 class_proportions = class_proportions)
 
     LL_change <- observed_data_LL - observed_data_LL0
 
@@ -199,13 +199,19 @@ EStep <- function(pi_ks, ngroup, nclus, loglik) {
 # generate random starting values for OpenMx
 generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
   startvalues <- vector(mode = "list", length = n_clusters)
-  labels_phi <- personmodel_list[[1]]$A$labels |> as.character()
-  labels_phi <- labels_phi[!is.na(labels_phi)]
-  labels_zeta <- personmodel_list[[1]]$Q$labels |> as.character() |> unique()
-  labels_zeta <- labels_zeta[!is.na(labels_zeta)]
+  free_phi <- personmodel_list[[1]]$A$free
+  labels_phi <- personmodel_list[[1]]$A$labels[free_phi]
+  values_phi <- personmodel_list[[1]]$A$values[free_phi]
+
+  free_zeta <- personmodel_list[[1]]$Q$free
+  labels_zeta <- personmodel_list[[1]]$Q$labels[free_zeta]
+  values_zeta <- personmodel_list[[1]]$Q$values[free_zeta]
+
   for (k in 1:n_clusters) {
     # generate a stationary matrix of regression coefficients
-    phistart <- matrix(runif(n_factors * n_factors, 0.05, .6), nrow = n_factors)
+    # create additive noise (-.5 to .5) for phi:
+    noise_multi <- stats::runif(length(values_phi), 0.5, 1.5)
+    phistart <- matrix(values_phi * noise_multi, nrow = n_factors)
     # check if the largest eigenvalue is greater than .9 in modulus:
     ev <- eigen(phistart)$values
     max_modulus <- max(Mod(ev))
@@ -217,7 +223,8 @@ generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
     }
 
     # generate a positive definitive matrix of innovation (co)variances
-    zetastart <- matrix(runif(n_factors * n_factors, 0.3, 1.5),
+    noise_multi <- stats::runif(length(values_phi), 0.5, 1.5)
+    zetastart <- matrix(values_zeta*noise_multi,
                         nrow = n_factors)
     zetastartPD <- Matrix::nearPD(zetastart)$mat |> as.matrix()
 

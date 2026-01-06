@@ -7,14 +7,14 @@
 #'
 #' @param data A data frame.
 #' @param measurementmodel A string describing the measurement model using the `lavaan` syntax.
-#'                         Can be a list of strings determining the number of measurement blocks (e.g., one string for the MM of factor 1, and a second string for the MM of factor 2).
+#'                         Can be a list of strings determining the measurement blocks (e.g., one string for the MM of factor 1, and a second string for the MM of factor 2).
 #' @param id_var String containing the name of the ID variable.
 #' @param group_var String containing the name of the grouping variable. Optional.
-#' @param invariances Character vector containing the parameters constrained to equality across groups (cf. the `group.equal` argument in `lavaan`)
-#' @param partial_noninvariances Character vector containing the non-invariances of the model (cf. the `group.partial` argument in `lavaan`). Must be a list of strings if `measurementmodel` is a list (e.g., one string for block 1, and a second string for block 2).
+#' @param invariances Character vector containing the parameters constrained to equality across groups (cf. the `group.equal` argument in `lavaan`). Optional.
+#' @param partial_noninvariances Character vector containing the non-invariances of the model (cf. the `group.partial` argument in `lavaan`). Optional. Must be a list of strings if `measurementmodel` is a list (e.g., one string for block 1, and a second string for block 2).
 #' @param ... Arguments to be passed on to [lavaan::cfa()].
 #'
-#' @returns A list comprising the output of the measurement model estimation (`mm_output`), the original data set (`data`), the measurement model (`measurement model`), and the ID variable (`id_var`).
+#' @returns A list comprising the output of the measurement model estimation (`mm_output`), the original data set (`data`), the measurement model (`measurementmodel`), and the ID variable (`id_var`).
 #' @export
 
 step1 <- function(data, measurementmodel, id_var,

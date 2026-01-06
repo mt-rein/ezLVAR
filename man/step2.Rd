@@ -14,9 +14,9 @@ A list containing the following elements:
 
 \code{data} The original data set with the appended factor scores.
 
-\code{lambda_star} The values for lambda* per individual.
+\code{lambda_star} The values of lambda* per individual.
 
-\code{theta_star} The values for theta* per individual.
+\code{theta_star} The values of theta* per individual.
 
 \code{other} A list containing information on the names of the \code{factors}, \code{indicators}, and the ID variable (\code{id_var}).
 }

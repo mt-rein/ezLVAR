@@ -38,39 +38,43 @@ step3(
 
 \item{Q}{An \code{OpenMx} matrix object that describes the innovation covariance matrix. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \code{\link[=create_Q]{create_Q()}} is available to create this object.}
 
-\item{B}{An \code{OpenMx} matrix object that describes the covariate effects on the latent variables. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.}
+\item{B}{An \code{OpenMx} matrix object that describes the covariate effects on the latent variables. Optional. If \code{NULL}, a zero matrix (i.e., no covariate effects) is automatically created.}
 
-\item{D}{An \code{OpenMx} matrix object that describes the covariate effects on the observed items. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.}
+\item{D}{An \code{OpenMx} matrix object that describes the covariate effects on the observed items. Optional. If \code{NULL}, a zero matrix (i.e., no covariate effects) is automatically created.}
 
-\item{x0}{An \code{OpenMx} matrix object that describes the initial latent variable vector that initiates the Kalman Filter. Optional. If NULL, an object is automatically created where all values are fixed to 0.}
+\item{x0}{An \code{OpenMx} matrix object that describes the initial latent variable vector that initiates the Kalman Filter. Optional. If \code{NULL}, an object is automatically created where all values are fixed to 0.}
 
-\item{P0}{An \code{OpenMx} matrix object that describes the initial error covariance matrix that initiates the Kalman Filter. Optional. If NULL, a matrix will be automatically created. The parameters are freely estimated, with large starting values (100 for the diagonal and 10 for the off-diagonal).}
+\item{P0}{An \code{OpenMx} matrix object that describes the initial error covariance matrix that initiates the Kalman Filter. Optional. If \code{NULL}, a matrix will be automatically created. The parameters are freely estimated, with large starting values (100 for the diagonal and 10 for the off-diagonal).}
 
-\item{u}{An \code{OpenMx} matrix object that indicates the covariates. Required if \code{B} or \code{D} are included. If NULL, an object with no covariates is automatically created.}
+\item{u}{An \code{OpenMx} matrix object that indicates the covariates. Required if \code{B} or \code{D} are included. If \code{NULL}, an object with no covariates is automatically created.}
 
 \item{group_var}{A string containing the name of the grouping variable for the structural model.}
 
 \item{mixture}{Logical. If TRUE, a mixture model is applied.}
 
-\item{n_clusters}{Numerical. The number of clusters (required if mixture = TRUE).}
+\item{n_clusters}{Numerical. The number of clusters (required if \code{mixture = TRUE}).}
 
-\item{n_starts}{Numerical. The total number of random starts.}
+\item{n_starts}{Numerical. The total number of random starts. Only used if \code{mixture = TRUE}.}
 
-\item{n_best_starts}{Numerical. The number of starts that are completed until convergence in Phase 2.}
+\item{n_best_starts}{Numerical. The number of starts that are completed until convergence in Phase 2. Only used if \code{mixture = TRUE}.}
 
-\item{maxit_phase1}{Numerical. The maximum number of iterations in Phase 1.}
+\item{maxit_phase1}{Numerical. The maximum number of iterations in Phase 1. Only used if \code{mixture = TRUE}.}
 
-\item{maxit_phase2}{Numerical. The maximum number of iterations in Phase 2.}
+\item{maxit_phase2}{Numerical. The maximum number of iterations in Phase 2. Only used if \code{mixture = TRUE}.}
 
-\item{stablecluster_criterion}{Numerical. If the average change in the posterior probabilities across persons after the E-Step in Phase 1 is smaller than this value, the clustering is considered stable.}
+\item{stablecluster_criterion}{Numerical. If the average change in the posterior probabilities across persons after the E-Step in Phase 1 is smaller than this value, the clustering is considered stable.  Only used if \code{mixture = TRUE}.}
 
-\item{convergence_criterion}{Numerical. If the change in the observed data log likelihood after the M-Step is smaller than this value, convergence is achieved.}
+\item{convergence_criterion}{Numerical. If the change in the observed data log likelihood after the M-Step is smaller than this value, convergence is achieved. Only used if \code{mixture = TRUE}.}
 
-\item{GEM_iterations}{The maximum number of iterations in OpenMx during the M-Step (when updating the model parameters) in Phase 1.}
+\item{GEM_iterations}{The maximum number of iterations in OpenMx during the M-Step (when updating the model parameters) in Phase 1. Only used if \code{mixture = TRUE}.}
 
-\item{seeds}{A numerical vector containing the starting seeds for each random start. Optional.}
+\item{parallel}{Logical. If TRUE, parallel processing is used. Only used if \code{mixture = TRUE}.}
 
-\item{newdata}{A data frame. Note that the output of \code{step2()} already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers).}
+\item{n_cores}{Numerical. number of cores to use when \code{parallel = TRUE}. If \code{NULL}, two cores are kept free for other tasks.}
+
+\item{seeds}{A numerical vector containing the starting seeds for each random start. Optional. If \code{NULL}, random seeds are automatically generated.  Only used if \code{mixture = TRUE}.}
+
+\item{newdata}{A data frame. Note that the output of \code{step2()} already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers). Optional.}
 
 \item{tryhard}{Should the algorithm run multiple times to obtain a solution (see \link[OpenMx:mxTryHard]{OpenMx::mxTryHard})? Does not work in conjunction with mixture modeling.}
 
@@ -93,7 +97,7 @@ If mixture modeling is used, the list also contains the following elements:
 
 \code{class_proportions} The class proportions (prior probabilities).
 
-\code{n_nonconveged} The number of starts that did not converge in Phase 2.
+\code{n_nonconverged} The number of starts that did not converge in Phase 2.
 
 \code{seeds} A vector containing the seeds per random start.
 

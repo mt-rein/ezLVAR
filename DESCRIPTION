@@ -1,18 +1,31 @@
 Package: ezLVAR
-Title: Estimate Latent Vector Autoregressive Models
-Version: 0.0.0.9000
+Title: Estimate Latent Vector Autoregressive Models in a Stepwise Manner
+Version: 0.9.0
 Authors@R: 
-    person("Manuel T.", "Rein", email = "m.t.rein@tilburguniversity.edu", role = c( "aut", "cre"))
-Description: `ezLVAR` aids researchers in implementing the Three-Step Latent Vector Autoregression method. In the first step, the measurement model ist estimated. In the second step, factor scores and  their reliability are computed. In the third step, the parameters of the structural model are estimated.
+    person("Manuel T.", "Rein", , "m.t.rein@tilburguniversity.edu", role = c("aut", "cre"))
+Description: `ezLVAR` aids researchers in implementing the Three-Step
+    Latent Vector Autoregression method. In the first step, the
+    measurement model ist estimated. In the second step, factor scores and
+    their reliability are computed. In the third step, the parameters of
+    the structural model are estimated, using the factor scores as
+    observed data while accounting for their inherent uncertainty.
 License: CC BY 4.0
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
-Imports: 
-    dplyr,
-    lavaan,
-    OpenMx,
-    purrr
 Depends: 
     R (>= 4.1.0)
+Imports: 
+    dplyr,
+    glue,
+    lavaan,
+    Matrix,
+    OpenMx,
+    parabar,
+    parallel,
+    purrr,
+    rlang,
+    stats,
+    tidyselect,
+    utils
+Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

@@ -18,20 +18,20 @@ step1(
 \item{data}{A data frame.}
 
 \item{measurementmodel}{A string describing the measurement model using the \code{lavaan} syntax.
-Can be a list of strings determining the number of measurement blocks (e.g., one string for the MM of factor 1, and a second string for the MM of factor 2).}
+Can be a list of strings determining the measurement blocks (e.g., one string for the MM of factor 1, and a second string for the MM of factor 2).}
 
 \item{id_var}{String containing the name of the ID variable.}
 
 \item{group_var}{String containing the name of the grouping variable. Optional.}
 
-\item{invariances}{Character vector containing the parameters constrained to equality across groups (cf. the \code{group.equal} argument in \code{lavaan})}
+\item{invariances}{Character vector containing the parameters constrained to equality across groups (cf. the \code{group.equal} argument in \code{lavaan}). Optional.}
 
-\item{partial_noninvariances}{Character vector containing the non-invariances of the model (cf. the \code{group.partial} argument in \code{lavaan}). Must be a list of strings if \code{measurementmodel} is a list (e.g., one string for block 1, and a second string for block 2).}
+\item{partial_noninvariances}{Character vector containing the non-invariances of the model (cf. the \code{group.partial} argument in \code{lavaan}). Optional. Must be a list of strings if \code{measurementmodel} is a list (e.g., one string for block 1, and a second string for block 2).}
 
 \item{...}{Arguments to be passed on to \code{\link[lavaan:cfa]{lavaan::cfa()}}.}
 }
 \value{
-A list comprising the output of the measurement model estimation (\code{mm_output}), the original data set (\code{data}), the measurement model (\verb{measurement model}), and the ID variable (\code{id_var}).
+A list comprising the output of the measurement model estimation (\code{mm_output}), the original data set (\code{data}), the measurement model (\code{measurementmodel}), and the ID variable (\code{id_var}).
 }
 \description{
 This function performs step 1 of 3S-LVAR: the estimation of the measurement model. It is a wrapper function around \code{lavaan::cfa()}.

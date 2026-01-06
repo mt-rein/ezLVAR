@@ -6,8 +6,8 @@
 #'
 #' @returns A list containing the following elements:
 #' @returns `data` The original data set with the appended factor scores.
-#' @returns `lambda_star` The values for lambda* per individual.
-#' @returns `theta_star` The values for theta* per individual.
+#' @returns `lambda_star` The values of lambda* per individual.
+#' @returns `theta_star` The values of theta* per individual.
 #' @returns `other` A list containing information on the names of the `factors`, `indicators`, and the ID variable (`id_var`).
 #' @export
 
@@ -90,6 +90,7 @@ step2 <- function(step1output) {
     rownames(theta_group[[g]]) <- colnames(theta_group[[g]]) <- indicators
   }
 
+  # if there are multiple groups, obtain the correct group names, otherwise just assign "group1".
   if (n_groups > 1) {
     names(psi_group) <-
       names(alpha_group) <-
@@ -107,8 +108,12 @@ step2 <- function(step1output) {
   }
 
   #### compute factor scores, lambda_star, theta_star ####
-  # initialize factor score list:
-  full_data_list <- vector("list", length = n_persons)
+  # add factor score variables to data frame:
+  full_data <- data
+  for (f in factors) {
+    full_data[[f]] <- NA_real_
+  }
+
   # create empty matrices with n_persons rows and n_factors columns
   lambda_star <-
     theta_star <-
@@ -121,7 +126,7 @@ step2 <- function(step1output) {
     data_i <- data[data[[id_var]] == id_i, , drop = FALSE]
     if (n_groups > 1) {
       # get group value of the individual:
-      group_i <- na.omit(data_i[[group_var]]) |> unique()
+      group_i <- stats::na.omit(data_i[[group_var]]) |> unique()
       # throw errors if the grouping variable for an individual is empty or has more than 1 value
       if (length(group_i) > 1) {
         stop(paste0("Individual ", id_i, " has more than 1 unique value on the grouping variable '", group_var, "'."))
@@ -148,7 +153,9 @@ step2 <- function(step1output) {
 
     # compute factor scores and add to factor scores list
     fs_i <- sweep(t(A_i %*% t(indicators_cent)), 2, alpha_i, "+")
-    full_data_list[[i]] <- cbind(data_i, fs_i)
+    rows_i <- which(data[[id_var]] == id_i)
+    full_data[rows_i, factors] <- fs_i
+
 
     # compute lambda_star and theta_star and add to respective matrix
     lambda_star_i <- (A_i %*% lambda_i) |> diag() |> as.numeric()
@@ -156,9 +163,6 @@ step2 <- function(step1output) {
     theta_star_i <- (A_i %*% theta_i %*% t(A_i)) |> diag() |> as.numeric()
     theta_star[i, ] <- c(id_i, theta_star_i)
   }
-
-
-  full_data <- do.call(rbind, full_data_list)
 
   # assemble output
   output <- list("data" = full_data,

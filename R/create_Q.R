@@ -6,14 +6,14 @@
 #'
 #'
 #' @param step2output The output obtained with the [step2()] function.
-#' @param startvalues A matrix that represents the starting values for each parameter. Must have the same dimensions as `free`, `labels`, `lbound` and `ubound` if these are not `NULL`.
+#' @param startvalues A square matrix that represents the starting values for each parameter. The number of rows/columns must be equal to the number of latent factors in the model.
 #' @param random_intercept Logical. If TRUE, the matrices `startvalues`, `free`, `labels`, `lbound`, and `ubound` are automatically expanded to accommodate the specification a random intercept.
-#' @param free A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If NULL, all variances and covariances are freely estimated. If not NULL, the matrix must have the same dimensions as `startvalues`, as well as `labels`, `lbound` and `ubound` if these are not `NULL`.
-#' @param labels A matrix of strings that indicates the labels for each parameter. Optional. If NULL, labels will be automatically generated. If not NULL, the matrix must have the same dimensions as `startvalues`, as well as `free`, `lbound` and `ubound` if these are not `NULL`.
-#' @param lbound A matrix of numeric values that indicates the lower bounds for each parameter. Optional. If NA, no bounds are imposed.
-#' @param ubound A matrix of numeric values that indicates the upper bounds for each parameter. Optional. If NA, no bounds are imposed.
+#' @param free A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If `NULL`, all variances and covariances are freely estimated. If not `NULL`, the matrix must have the same dimensions as `startvalues`.
+#' @param labels A matrix of strings that indicates the labels for each parameter. Optional. If `NULL`, labels will be automatically generated. If not `NULL`, the matrix must have the same dimensions as `startvalues`.
+#' @param lbound A matrix of numeric values that indicates the lower bounds for each parameter (if a value is NA, no bounds are imposed on that parameter). Optional. If not `NULL`, the matrix must have the same dimensions as `startvalues`.
+#' @param ubound A matrix of numeric values that indicates the upper bounds for each parameter (if a value is NA, no bounds are imposed on that parameter). Optional. If not `NULL`, the matrix must have the same dimensions as `startvalues`.
 #'
-#' @returns Q An `OpenMx` matrix object that is enter into [step3()].
+#' @returns Q An `OpenMx` matrix object that is entered into [step3()].
 #' @export
 
 create_Q <- function(step2output, startvalues,
@@ -42,6 +42,10 @@ create_Q <- function(step2output, startvalues,
   factors <- step2output$other$factors
   n_factors <- length(factors)
 
+  if (nrow(startvalues) != n_factors) {
+    stop("The number of rows/columns of the startvalues matrix must be equal to the number of latent factors in the model.")
+  }
+
   if(!random_intercept){
     # create matrix that indicates free parameters
     if(is.null(free)){
@@ -67,16 +71,6 @@ create_Q <- function(step2output, startvalues,
     if(is.null(ubound)){
       ubound <- NA
     }
-
-    # create OpenMx model object
-    Q <- OpenMx::mxMatrix(type = "Full", name = "Q",
-                          nrow = n_factors, ncol = n_factors,
-                          free = free,
-                          values = startvalues,
-                          labels = labels,
-                          lbound = lbound,
-                          ubound = ubound,
-                          byrow = TRUE)
   }
 
   if(random_intercept){
@@ -123,18 +117,17 @@ create_Q <- function(step2output, startvalues,
     zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
     startvalues <- rbind(cbind(startvalues, zero_matrix),
                     cbind(zero_matrix, zero_matrix))
-
-
-    # create OpenMx model object
-    Q <- OpenMx::mxMatrix(type = "Full", name = "Q",
-                          nrow = 2*n_factors, ncol = 2*n_factors,
-                          free = free,
-                          values = startvalues,
-                          labels = labels,
-                          lbound = lbound,
-                          ubound = ubound,
-                          byrow = TRUE)
   }
+
+  # create OpenMx model object
+  Q <- OpenMx::mxMatrix(type = "Full", name = "Q",
+                        nrow = nrow(startvalues), ncol = nrow(startvalues),
+                        free = free,
+                        values = startvalues,
+                        labels = labels,
+                        lbound = lbound,
+                        ubound = ubound,
+                        byrow = TRUE)
 
   return(Q)
 }

@@ -7,23 +7,25 @@
 #' @param step2output The output obtained with the `step2()` function.
 #' @param A An `OpenMx` matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See [OpenMx::mxExpectationStateSpace]. The helper function [create_A()] is available to create this object.
 #' @param Q An `OpenMx` matrix object that describes the innovation covariance matrix. See [OpenMx::mxExpectationStateSpace]. The helper function [create_Q()] is available to create this object.
-#' @param B An `OpenMx` matrix object that describes the covariate effects on the latent variables. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.
-#' @param D An `OpenMx` matrix object that describes the covariate effects on the observed items. Optional. If NULL, a zero matrix (i.e., no covariate effects) is automatically created.
-#' @param x0 An `OpenMx` matrix object that describes the initial latent variable vector that initiates the Kalman Filter. Optional. If NULL, an object is automatically created where all values are fixed to 0.
-#' @param P0 An `OpenMx` matrix object that describes the initial error covariance matrix that initiates the Kalman Filter. Optional. If NULL, a matrix will be automatically created. The parameters are freely estimated, with large starting values (100 for the diagonal and 10 for the off-diagonal).
-#' @param u An `OpenMx` matrix object that indicates the covariates. Required if `B` or `D` are included. If NULL, an object with no covariates is automatically created.
+#' @param B An `OpenMx` matrix object that describes the covariate effects on the latent variables. Optional. If `NULL`, a zero matrix (i.e., no covariate effects) is automatically created.
+#' @param D An `OpenMx` matrix object that describes the covariate effects on the observed items. Optional. If `NULL`, a zero matrix (i.e., no covariate effects) is automatically created.
+#' @param x0 An `OpenMx` matrix object that describes the initial latent variable vector that initiates the Kalman Filter. Optional. If `NULL`, an object is automatically created where all values are fixed to 0.
+#' @param P0 An `OpenMx` matrix object that describes the initial error covariance matrix that initiates the Kalman Filter. Optional. If `NULL`, a matrix will be automatically created. The parameters are freely estimated, with large starting values (100 for the diagonal and 10 for the off-diagonal).
+#' @param u An `OpenMx` matrix object that indicates the covariates. Required if `B` or `D` are included. If `NULL`, an object with no covariates is automatically created.
 #' @param group_var A string containing the name of the grouping variable for the structural model.
 #' @param mixture Logical. If TRUE, a mixture model is applied.
-#' @param n_clusters Numerical. The number of clusters (required if mixture = TRUE).
-#' @param n_starts Numerical. The total number of random starts.
-#' @param n_best_starts Numerical. The number of starts that are completed until convergence in Phase 2.
-#' @param maxit_phase1 Numerical. The maximum number of iterations in Phase 1.
-#' @param maxit_phase2 Numerical. The maximum number of iterations in Phase 2.
-#' @param stablecluster_criterion Numerical. If the average change in the posterior probabilities across persons after the E-Step in Phase 1 is smaller than this value, the clustering is considered stable.
-#' @param convergence_criterion Numerical. If the change in the observed data log likelihood after the M-Step is smaller than this value, convergence is achieved.
-#' @param GEM_iterations The maximum number of iterations in OpenMx during the M-Step (when updating the model parameters) in Phase 1.
-#' @param seeds A numerical vector containing the starting seeds for each random start. Optional.
-#' @param newdata A data frame. Note that the output of `step2()` already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers).
+#' @param n_clusters Numerical. The number of clusters (required if `mixture = TRUE`).
+#' @param n_starts Numerical. The total number of random starts. Only used if `mixture = TRUE`.
+#' @param n_best_starts Numerical. The number of starts that are completed until convergence in Phase 2. Only used if `mixture = TRUE`.
+#' @param maxit_phase1 Numerical. The maximum number of iterations in Phase 1. Only used if `mixture = TRUE`.
+#' @param maxit_phase2 Numerical. The maximum number of iterations in Phase 2. Only used if `mixture = TRUE`.
+#' @param stablecluster_criterion Numerical. If the average change in the posterior probabilities across persons after the E-Step in Phase 1 is smaller than this value, the clustering is considered stable.  Only used if `mixture = TRUE`.
+#' @param convergence_criterion Numerical. If the change in the observed data log likelihood after the M-Step is smaller than this value, convergence is achieved. Only used if `mixture = TRUE`.
+#' @param GEM_iterations The maximum number of iterations in OpenMx during the M-Step (when updating the model parameters) in Phase 1. Only used if `mixture = TRUE`.
+#' @param parallel Logical. If TRUE, parallel processing is used. Only used if `mixture = TRUE`.
+#' @param n_cores Numerical. number of cores to use when `parallel = TRUE`. If `NULL`, two cores are kept free for other tasks.
+#' @param seeds A numerical vector containing the starting seeds for each random start. Optional. If `NULL`, random seeds are automatically generated.  Only used if `mixture = TRUE`.
+#' @param newdata A data frame. Note that the output of `step2()` already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers). Optional.
 #' @param tryhard Should the algorithm run multiple times to obtain a solution (see [OpenMx::mxTryHard])? Does not work in conjunction with mixture modeling.
 #' @param verbose Logical (FALSE by default). If TRUE, print progress messages.
 #'
@@ -35,7 +37,7 @@
 #' @returns `loglik` The observed data log likelihood of the best model.
 #' @returns `posterior_probabilities` A data.frame with the posterior probabilities per person per cluster, and their modal cluster assignment (i.e., for which cluster they have the highest posterior probability).
 #' @returns `class_proportions` The class proportions (prior probabilities).
-#' @returns `n_nonconveged` The number of starts that did not converge in Phase 2.
+#' @returns `n_nonconverged` The number of starts that did not converge in Phase 2.
 #' @returns `seeds` A vector containing the seeds per random start.
 #' @returns `best_seed` The seed of the best random start.
 #'
@@ -80,6 +82,10 @@ step3 <- function(step2output, A, Q,
 
     if (!is.null(seeds) && seeds != n_starts) {
       stop("You need to provide as many seeds (length of 'seeds') as random starts (size of 'n_starts').")
+    }
+
+    if (parallel && !is.null(n_cores) && n_cores > parallel::detectCores()) {
+      stop("The number of cores you specified in the 'n_cores' argument is greater than the number of cores on your machine.")
     }
   }
 
@@ -204,7 +210,7 @@ step3 <- function(step2output, A, Q,
   for (i in 1:n_persons) {
     # get person's id, data, lambda_star, theta_star
     id_i <- unique_ids[i]
-    data_i <- data[data[[id_var]] == id_i, ]
+    data_i <- data[data[[id_var]] == id_i, ] |> as.data.frame()
     lambda_star_i <- lambda_star[lambda_star[[id_var]] == id_i, factors] |>
       as.numeric()
     theta_star_i <- theta_star[theta_star[[id_var]] == id_i, factors] |>
@@ -254,7 +260,7 @@ step3 <- function(step2output, A, Q,
     # (individuals in different groups get different labels)
     if (!is.null(group_var)) {
       # get group value of the individual:
-      group_i <- na.omit(data_i[[group_var]]) |> unique()
+      group_i <- stats::na.omit(data_i[[group_var]]) |> unique()
       # throw errors if the grouping variable for an individual is empty or has more than 1 value
       if (length(group_i) > 1) {
         stop(glue::glue("Individual {id_i} has more than 1 unique value on the grouping variable '{group_var}'."))
@@ -264,8 +270,8 @@ step3 <- function(step2output, A, Q,
       }
 
       model_i <- OpenMx::omxSetParameters(model_i,
-                                          labels = names(coef(model_i)),
-                                          newlabels = paste0(names(coef(model_i)),
+                                          labels = names(stats::coef(model_i)),
+                                          newlabels = paste0(names(stats::coef(model_i)),
                                                              "_", group_i))
     }
 
@@ -286,7 +292,7 @@ step3 <- function(step2output, A, Q,
       fullmodelr <- OpenMx::mxRun(fullmodel, silent = !verbose)
     }
 
-    estimates <- coef(fullmodelr)
+    estimates <- stats::coef(fullmodelr)
 
     ## build output
     output <- list("estimates" = estimates,
@@ -315,6 +321,9 @@ step3 <- function(step2output, A, Q,
       # add number of cores if not specified:
       if (is.null(n_cores)) {
         n_cores = parallel::detectCores() - 2
+        if(n_cores < 2) {
+          stop("Your machine does not have enough cores to keep 2 free. Please use sequential processing or specify a number of cores using the 'n_cores' argument.")
+        }
       }
 
       # create cluster:
@@ -332,7 +341,7 @@ step3 <- function(step2output, A, Q,
       # run random starts in parallel:
       results_phase1 <- parabar::par_lapply(backend,
                                             input_phase1,
-                                            ezLVAR:::run_start,
+                                            run_start,
                                             personmodel_list = personmodel_list,
                                             n_clusters = n_clusters,
                                             n_factors = n_factors,
@@ -348,7 +357,7 @@ step3 <- function(step2output, A, Q,
       parabar::stop_backend(backend)
     } else {
       results_phase1 <- lapply(input_phase1,
-                               ezLVAR:::run_start,
+                               run_start,
                                personmodel_list = personmodel_list,
                                n_clusters = n_clusters,
                                n_factors = n_factors,
@@ -370,7 +379,7 @@ step3 <- function(step2output, A, Q,
     top_starts <- results_phase1 |>
       purrr::map_dbl(~ .x$observed_data_LL) |>
       order(decreasing = TRUE) |>
-      head(n_best_starts)
+      utils::head(n_best_starts)
 
     input_phase2 <- results_phase1[top_starts]
 
@@ -390,7 +399,7 @@ step3 <- function(step2output, A, Q,
       # run random starts in parallel:
       results_phase2 <- parabar::par_lapply(backend,
                                             input_phase2,
-                                            ezLVAR:::run_start,
+                                            run_start,
                                             personmodel_list = personmodel_list,
                                             n_clusters = n_clusters,
                                             n_factors = n_factors,
@@ -406,7 +415,7 @@ step3 <- function(step2output, A, Q,
       parabar::stop_backend(backend)
     } else {
       results_phase2 <- lapply(input_phase2,
-                               ezLVAR:::run_start,
+                               run_start,
                                personmodel_list = personmodel_list,
                                n_clusters = n_clusters,
                                n_factors = n_factors,
@@ -427,21 +436,25 @@ step3 <- function(step2output, A, Q,
     best_start <- results_phase2 |>
       purrr::map_dbl(~ .x$observed_data_LL) |>
       order(decreasing = TRUE) |>
-      head(1)
+      utils::head(1)
 
     selected_start <- results_phase2[[best_start]]
 
 
     ## build output
+    cluster_names <- paste0("cluster", 1:n_clusters)
     estimates <- selected_start$clustermodels_run |>
-      purrr::map(coef)
+      purrr::map(stats::coef)
+    names(estimates) <- cluster_names
     best_model <- selected_start$clustermodels_run
     loglik <- selected_start$observed_data_LL
     post <- as.data.frame(selected_start$post) |> round(3)
-    colnames(post) <- paste0("cluster", 1:n_clusters)
+    colnames(post) <- cluster_names
     post$modal <- apply(post, 1, function(x) names(x)[which.max(x)])
-    post <- post |> tibble::add_column(!!id_var := unique_ids, .before = 1)
+    post[[id_var]] <- unique_ids
+    post <- post[, c(id_var, cluster_names, "modal")]
     class_proportions <- selected_start$class_proportions |> round(3)
+    names(class_proportions) <- cluster_names
     convergence_counter <- results_phase2 |>
       purrr::map_lgl(~ .x$converged)
     n_nonconverged <- sum(!convergence_counter)

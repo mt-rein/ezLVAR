@@ -17,20 +17,20 @@ create_Q(
 \arguments{
 \item{step2output}{The output obtained with the \code{\link[=step2]{step2()}} function.}
 
-\item{startvalues}{A matrix that represents the starting values for each parameter. Must have the same dimensions as \code{free}, \code{labels}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
+\item{startvalues}{A square matrix that represents the starting values for each parameter. The number of rows/columns must be equal to the number of latent factors in the model.}
 
 \item{random_intercept}{Logical. If TRUE, the matrices \code{startvalues}, \code{free}, \code{labels}, \code{lbound}, and \code{ubound} are automatically expanded to accommodate the specification a random intercept.}
 
-\item{free}{A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If NULL, all variances and covariances are freely estimated. If not NULL, the matrix must have the same dimensions as \code{startvalues}, as well as \code{labels}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
+\item{free}{A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If \code{NULL}, all variances and covariances are freely estimated. If not \code{NULL}, the matrix must have the same dimensions as \code{startvalues}.}
 
-\item{labels}{A matrix of strings that indicates the labels for each parameter. Optional. If NULL, labels will be automatically generated. If not NULL, the matrix must have the same dimensions as \code{startvalues}, as well as \code{free}, \code{lbound} and \code{ubound} if these are not \code{NULL}.}
+\item{labels}{A matrix of strings that indicates the labels for each parameter. Optional. If \code{NULL}, labels will be automatically generated. If not \code{NULL}, the matrix must have the same dimensions as \code{startvalues}.}
 
-\item{lbound}{A matrix of numeric values that indicates the lower bounds for each parameter. Optional. If NA, no bounds are imposed.}
+\item{lbound}{A matrix of numeric values that indicates the lower bounds for each parameter (if a value is NA, no bounds are imposed on that parameter). Optional. If not \code{NULL}, the matrix must have the same dimensions as \code{startvalues}.}
 
-\item{ubound}{A matrix of numeric values that indicates the upper bounds for each parameter. Optional. If NA, no bounds are imposed.}
+\item{ubound}{A matrix of numeric values that indicates the upper bounds for each parameter (if a value is NA, no bounds are imposed on that parameter). Optional. If not \code{NULL}, the matrix must have the same dimensions as \code{startvalues}.}
 }
 \value{
-Q An \code{OpenMx} matrix object that is enter into \code{\link[=step3]{step3()}}.
+Q An \code{OpenMx} matrix object that is entered into \code{\link[=step3]{step3()}}.
 }
 \description{
 This is a helper function to create the Q matrix, which is required to specify the structural model for \code{\link[=step3]{step3()}}.
