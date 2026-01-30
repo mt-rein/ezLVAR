@@ -18,7 +18,7 @@ A list containing the following elements:
 
 \code{theta_star} The values of theta* per individual.
 
-\code{other} A list containing information on the names of the \code{factors}, \code{indicators}, and the ID variable (\code{id_var}).
+\code{other} An object of class \verb{3slvar_step2}, which is a list containing information on the names of the \code{factors}, \code{indicators}, and the ID variable (\code{id_var}).
 }
 \description{
 This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to \code{\link[=step3]{step3()}}.

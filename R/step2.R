@@ -8,7 +8,7 @@
 #' @returns `data` The original data set with the appended factor scores.
 #' @returns `lambda_star` The values of lambda* per individual.
 #' @returns `theta_star` The values of theta* per individual.
-#' @returns `other` A list containing information on the names of the `factors`, `indicators`, and the ID variable (`id_var`).
+#' @returns `other` An object of class `3slvar_step2`, which is a list containing information on the names of the `factors`, `indicators`, and the ID variable (`id_var`).
 #' @export
 
 step2 <- function(step1output) {
@@ -172,5 +172,6 @@ step2 <- function(step1output) {
                                 "indicators" =  indicators,
                                 "id_var" = id_var)
   )
+  class(output) <- "3slvar_step2"
   return(output)
 }

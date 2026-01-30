@@ -14,7 +14,7 @@
 #' @param partial_noninvariances Character vector containing the non-invariances of the model (cf. the `group.partial` argument in `lavaan`). Optional. Must be a list of strings if `measurementmodel` is a list (e.g., one string for block 1, and a second string for block 2).
 #' @param ... Arguments to be passed on to [lavaan::cfa()].
 #'
-#' @returns A list comprising the output of the measurement model estimation (`mm_output`), the original data set (`data`), the measurement model (`measurementmodel`), and the ID variable (`id_var`).
+#' @returns An object of class `3slvar_step1`, which is a list comprising the output of the measurement model estimation (`mm_output`), the original data set (`data`), the measurement model (`measurementmodel`), and the ID variable (`id_var`).
 #' @export
 
 step1 <- function(data, measurementmodel, id_var,
@@ -56,6 +56,7 @@ step1 <- function(data, measurementmodel, id_var,
                                   meanstructure = TRUE,
                                   group.equal = invariances,
                                   group.partial = partial_noninvariances[[m]],
+                                  orthogonal = TRUE,
                                   ...)
   }
 
@@ -64,5 +65,6 @@ step1 <- function(data, measurementmodel, id_var,
                  "data" = data,
                  "measurementmodel" = measurementmodel,
                  "id_var" = id_var)
+  class(output) <- "3slvar_step1"
   return(output)
 }
