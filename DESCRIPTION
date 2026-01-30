@@ -11,13 +11,13 @@ Description: `ezLVAR` aids researchers in implementing the Three-Step
     observed data while accounting for their inherent uncertainty.
 License: CC BY 4.0
 Depends: 
+    OpenMx,
     R (>= 4.1.0)
 Imports: 
     dplyr,
     glue,
     lavaan,
     Matrix,
-    OpenMx,
     parabar,
     parallel,
     purrr,
