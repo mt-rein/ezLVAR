@@ -81,21 +81,21 @@ step3(
 \item{verbose}{Logical (FALSE by default). If TRUE, print progress messages.}
 }
 \value{
-A list containing the following elements:
+If \code{mixture = FALSE}, returns a fitted \code{MxModel} object.
 
-\code{estimates} A vector that includes the parameter estimates. In the case of mixture modeling, a list of vectors (one for each cluster).
+If \code{mixture = TRUE}, returns an object of class \verb{3slvar_step3mix}, which is a list containing the following elements:
 
-\code{model} The fitted model (an OpenMx object). In the case of mixture modeling, a list of models (one for each cluster).
+\code{estimates} A list of vectors (one for each cluster) that contain the parameter estimates in the best model.
 
-\code{data} The data set which served as input.
+\code{SEs} A list of vectors (one for each cluster) that contain the standard errors in the best model.
 
-If mixture modeling is used, the list also contains the following elements:
+\code{model} A list of fitted \code{MxModel} objects (one for each cluster).
 
 \code{loglik} The observed data log likelihood of the best model.
 
-\code{posterior_probabilities} A data.frame with the posterior probabilities per person per cluster, and their modal cluster assignment (i.e., for which cluster they have the highest posterior probability).
+\code{posterior_probabilities} A data.frame with the posterior probabilities per person per cluster in the best model, and their modal cluster assignment (i.e., for which cluster they have the highest posterior probability).
 
-\code{class_proportions} The class proportions (prior probabilities).
+\code{class_proportions} The class proportions (prior probabilities) in the best model.
 
 \code{n_nonconverged} The number of starts that did not converge in Phase 2.
 

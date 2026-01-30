@@ -29,21 +29,19 @@
 #' @param tryhard Should the algorithm run multiple times to obtain a solution (see [OpenMx::mxTryHard])? Does not work in conjunction with mixture modeling.
 #' @param verbose Logical (FALSE by default). If TRUE, print progress messages.
 #'
-#' @returns A list containing the following elements:
-#' @returns `estimates` A vector that includes the parameter estimates. In the case of mixture modeling, a list of vectors (one for each cluster).
-#' @returns `model` The fitted model (an OpenMx object). In the case of mixture modeling, a list of models (one for each cluster).
-#' @returns `data` The data set which served as input.
-#' @returns If mixture modeling is used, the list also contains the following elements:
+#' @returns If `mixture = FALSE`, returns a fitted `MxModel` object.
+#' @returns If `mixture = TRUE`, returns an object of class `3slvar_step3mix`, which is a list containing the following elements:
+#' @returns `estimates` A list of vectors (one for each cluster) that contain the parameter estimates in the best model.
+#' @returns `SEs` A list of vectors (one for each cluster) that contain the standard errors in the best model.
+#' @returns `model` A list of fitted `MxModel` objects (one for each cluster).
 #' @returns `loglik` The observed data log likelihood of the best model.
-#' @returns `posterior_probabilities` A data.frame with the posterior probabilities per person per cluster, and their modal cluster assignment (i.e., for which cluster they have the highest posterior probability).
-#' @returns `class_proportions` The class proportions (prior probabilities).
+#' @returns `posterior_probabilities` A data.frame with the posterior probabilities per person per cluster in the best model, and their modal cluster assignment (i.e., for which cluster they have the highest posterior probability).
+#' @returns `class_proportions` The class proportions (prior probabilities) in the best model.
 #' @returns `n_nonconverged` The number of starts that did not converge in Phase 2.
 #' @returns `seeds` A vector containing the seeds per random start.
 #' @returns `best_seed` The seed of the best random start.
 #'
 #' @export
-#' @importFrom OpenMx imxReportProgress
-
 step3 <- function(step2output, A, Q,
                   B = NULL, D = NULL,
                   x0 = NULL, P0 = NULL,
@@ -114,7 +112,7 @@ step3 <- function(step2output, A, Q,
 
   #### 2) create OpenMx matrices ####
   # number of latent variables:
-  xdim <- nrow(A$free)
+  xdim <- nrow(A@free)
   # exogenous covariates (ignored so far):
   udim <- 1
   # number of indicators (i.e., factor score variables)
@@ -270,8 +268,8 @@ step3 <- function(step2output, A, Q,
       }
 
       model_i <- OpenMx::omxSetParameters(model_i,
-                                          labels = names(stats::coef(model_i)),
-                                          newlabels = paste0(names(stats::coef(model_i)),
+                                          labels = names(OpenMx::omxGetParameters(model_i)),
+                                          newlabels = paste0(names(OpenMx::omxGetParameters(model_i)),
                                                              "_", group_i))
     }
 
@@ -292,12 +290,8 @@ step3 <- function(step2output, A, Q,
       fullmodelr <- OpenMx::mxRun(fullmodel, silent = !verbose)
     }
 
-    estimates <- stats::coef(fullmodelr)
-
     ## build output
-    output <- list("estimates" = estimates,
-                   "model" = fullmodelr,
-                   "data" = data)
+    output <- fullmodelr
   }
 
   #### 5) mixture modeling ####
@@ -306,6 +300,7 @@ step3 <- function(step2output, A, Q,
   # after a stable clustering is achieved, a final precise M-Step is performed
   # Then, the n_best_starts best starts are completed
   if (mixture) {
+    starttime <- Sys.time()
     # provide seeds for the multiple starts (for replicability)
     if (is.null(seeds)) {
       seeds <- sample.int(.Machine$integer.max, n_starts)
@@ -329,7 +324,12 @@ step3 <- function(step2output, A, Q,
       # create cluster:
       backend <- parabar::start_backend(n_cores, cluster_type = "psock", backend_type = "async")
 
-      # add variables to cluster:
+      # load ezLVAR package in each cluster:
+      parabar::evaluate(backend, {
+        suppressPackageStartupMessages(library(ezLVAR))
+      })
+
+      # add required objects to each cluster:
       parabar::export(backend,
                       variables = c(
                         "personmodel_list", "n_clusters", "n_factors", "n_persons",
@@ -387,7 +387,12 @@ step3 <- function(step2output, A, Q,
       # create cluster:
       backend <- parabar::start_backend(n_cores, cluster_type = "psock", backend_type = "async")
 
-      # add variables to cluster:
+      # load ezLVAR package in each cluster:
+      parabar::evaluate(backend, {
+        suppressPackageStartupMessages(library(ezLVAR))
+      })
+
+      # add required objects to each cluster:
       parabar::export(backend,
                       variables = c(
                         "personmodel_list", "n_clusters", "n_factors", "n_persons",
@@ -428,10 +433,6 @@ step3 <- function(step2output, A, Q,
                                verbose = verbose)
     }
 
-    if (verbose) {
-      message(glue::glue("==== Phase 2 finished. ===="))
-    }
-
     # select best model:
     best_start <- results_phase2 |>
       purrr::map_dbl(~ .x$observed_data_LL) |>
@@ -439,15 +440,60 @@ step3 <- function(step2output, A, Q,
       utils::head(1)
 
     selected_start <- results_phase2[[best_start]]
+    best_model <- selected_start$clustermodels_run
 
+    # rerun best model to obtain standard errors:
+    best_model <- best_model |>
+      purrr::map(function(model) {
+      # change options
+      model <- OpenMx::mxOption(model,
+                                key = "Calculate Hessian",
+                                value = NULL)
+      model <- OpenMx::mxOption(model,
+                                key = "Standard Errors",
+                                value = NULL)
+    })
+
+    best_model <- best_model |>
+      purrr::map(OpenMx::mxRun,
+                 silent = TRUE,
+                 suppressWarnings = TRUE)
+    # obtain person-wise LL in a n_persons x n_clusters matrix:
+    personLL <- best_model |>
+      # loop over all clusters
+      purrr::map(function(clustermodel) {
+        # loop over all persons per cluster and extract the person-wise fit function value
+        purrr::map_dbl(clustermodel$submodels, function(personmodel) {
+          personmodel$fitfunction$result
+        })
+      }) |>
+      simplify2array()
+    personLL <- personLL / (-2)
+    # openMx gives the minus2LL, so we divide by minus 2
+
+    # compute observed-data log likelihood from person-wise LL:
+    observed_data_LL <- compute_observed_data_LL(personLL = personLL,
+                                                 class_proportions = class_proportions)
+
+    if (verbose) {
+      message(glue::glue("==== Phase 2 finished. ===="))
+    }
+
+    duration <- Sys.time() - starttime
 
     ## build output
+    # parameter estimates and SEs
     cluster_names <- paste0("cluster", 1:n_clusters)
-    estimates <- selected_start$clustermodels_run |>
-      purrr::map(stats::coef)
-    names(estimates) <- cluster_names
-    best_model <- selected_start$clustermodels_run
-    loglik <- selected_start$observed_data_LL
+    names(best_model) <- cluster_names
+    estimates <- best_model |>
+      purrr::map(OpenMx::omxGetParameters)
+    estimates <- do.call(rbind, estimates)
+    StandardErrors <- best_model |>
+      purrr::map(~ t(.x$output$standardErrors))
+    StandardErrors <- do.call(rbind, StandardErrors)
+    rownames(StandardErrors) <- cluster_names
+
+    # clustering
     post <- as.data.frame(selected_start$post) |> round(3)
     colnames(post) <- cluster_names
     post$modal <- apply(post, 1, function(x) names(x)[which.max(x)])
@@ -455,19 +501,27 @@ step3 <- function(step2output, A, Q,
     post <- post[, c(id_var, cluster_names, "modal")]
     class_proportions <- selected_start$class_proportions |> round(3)
     names(class_proportions) <- cluster_names
+
+    # other information
     convergence_counter <- results_phase2 |>
       purrr::map_lgl(~ .x$converged)
     n_nonconverged <- sum(!convergence_counter)
+    n_parameters <- n_clusters - 1 + nrow(estimates)*ncol(estimates)
     best_seed <- selected_start$seed
     output <- list("estimates" = estimates,
+                   "StandardErrors" = StandardErrors,
                    "model" = best_model,
-                   "data" = data,
-                   "loglik" = loglik,
+                   "duration" = duration,
+                   "logLik" = observed_data_LL,
                    "posterior_probabilities" = post,
                    "class_proportions" = class_proportions,
+                   "n_clusters" = n_clusters,
+                   "n_persons" = n_persons,
+                   "n_parameters" = n_parameters,
                    "n_nonconverged" = n_nonconverged,
                    "seeds" = seeds,
                    "best_seed" = best_seed)
+    class(output) <- "3slvar_step3mix"
   }
 
   return(output)

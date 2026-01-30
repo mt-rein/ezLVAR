@@ -42,7 +42,7 @@ run_start <- function(input_list,
 
 
   # create list with names of objective functions (needed in M-Step)
-  objectives <- sapply(personmodel_list, function(x) x$name) |>
+  objectives <- sapply(personmodel_list, function(x) x@name) |>
     as.character() |>
     paste0(".objective")
 
@@ -81,7 +81,7 @@ run_start <- function(input_list,
     # get start values from the coefficients of previous iteration:
     if (phase == 2 | it > 1) {
       startvalues <- clustermodels_run |>
-        purrr::map(stats::coef)
+        purrr::map(OpenMx::omxGetParameters)
     } else {
       # in the first iteration, generate random start values in each cluster
       startvalues <- generate_startvalues(n_clusters = n_clusters,
@@ -132,7 +132,13 @@ run_start <- function(input_list,
 
     # obtain person-wise LL in a n_persons x n_clusters matrix:
     personLL <- clustermodels_run |>
-      purrr::map(~ purrr::map_dbl(.x$submodels, ~ .x$fitfunction$result)) |>
+      # loop over all clusters
+      purrr::map(function(clustermodel) {
+        # loop over all persons per cluster and extract the person-wise fit function value
+        purrr::map_dbl(clustermodel$submodels, function(personmodel) {
+          personmodel$fitfunction$result
+        })
+      }) |>
       simplify2array()
     personLL <- personLL / (-2)
     # openMx gives the minus2LL, so we divide by minus 2
