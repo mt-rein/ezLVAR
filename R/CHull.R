@@ -49,12 +49,10 @@ CHull <- function(model_list, criterion = "logLik") {
     fitind[[criterion]]
   })
   n_par <- sapply(model_list_sorted, function(x) x$n_parameters)
-  fit_values <- sapply(model_list_sorted, function(x) x$BIC)
 
   df <- data.frame(n_clusters = n_clusters,
                    n_par = n_par,
                    fit_values = fit_values)
-  plot(df$n_par, df$fit_values, type = "b", xlab = "Number of parameters", ylab = criterion)
 
   ## Step 3: compare models pairwise, remove models with worse fit than a simpler model
   # (i.e., obtain monotonic increase/decrease in fit_values)
