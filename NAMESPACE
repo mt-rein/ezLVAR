@@ -2,9 +2,13 @@
 
 S3method(summary,"3slvar_step1")
 S3method(summary,"3slvar_step2")
+export(CHull)
 export(create_A)
 export(create_Q)
+export(fit_indices)
 export(get_data)
+export(model_selection)
+export(r2_entropy)
 export(step1)
 export(step2)
 export(step3)
