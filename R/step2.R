@@ -4,11 +4,12 @@
 #'
 #' @param step1output The output obtained with the `step1()` function.
 #'
-#' @returns A list containing the following elements:
-#' @returns `data` The original data set with the appended factor scores.
-#' @returns `lambda_star` The values of lambda* per individual.
-#' @returns `theta_star` The values of theta* per individual.
-#' @returns `other` An object of class `3slvar_step2`, which is a list containing information on the names of the `factors`, `indicators`, and the ID variable (`id_var`).
+#' @returns An object of class `3slvar_step2`, which is a list comprising the following elements:
+#' \item{data}{The original data set with the appended factor scores.}
+#' \item{lambda_star}{A data frame containing the values of lambda* per individual.}
+#' \item{theta_star}{A data frame containing the values of theta* per individual.}
+#' \item{other}{A list containing information on the names of the `factors`, `indicators`, and the ID variable (`id_var`).}
+#'
 #' @export
 
 step2 <- function(step1output) {

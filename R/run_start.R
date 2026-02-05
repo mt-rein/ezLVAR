@@ -1,4 +1,4 @@
-#### run_start ####
+#### run_start (internal helper) ####
 # perform a single random start in either Phase 1 or Phase 2
 run_start <- function(input_list,
                       personmodel_list,
@@ -179,7 +179,7 @@ run_start <- function(input_list,
   return(output)
 }
 
-#### EStep ####
+#### EStep (internal helper) ####
 # perform the E-Step of the EM algorithm
 EStep <- function(pi_ks, ngroup, nclus, loglik) {
 
@@ -201,7 +201,7 @@ EStep <- function(pi_ks, ngroup, nclus, loglik) {
 }
 # taken from https://github.com/AndresFPA/mmgsem/blob/main/R/E_Step.R
 
-#### generate_startvalues ####
+#### generate_startvalues (internal helper) ####
 # generate random starting values for OpenMx
 generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
   startvalues <- vector(mode = "list", length = n_clusters)
@@ -243,7 +243,7 @@ generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
   return(startvalues)
 }
 
-#### compute_observed_data_LL ####
+#### compute_observed_data_LL (internal helper) ####
 # compute observed LL from personwise LL and class proportions
 compute_observed_data_LL <- function(personLL, class_proportions) {
   # sum with the log of class proportions:
