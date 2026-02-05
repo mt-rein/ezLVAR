@@ -10,15 +10,11 @@ step2(step1output)
 \item{step1output}{The output obtained with the \code{step1()} function.}
 }
 \value{
-A list containing the following elements:
-
-\code{data} The original data set with the appended factor scores.
-
-\code{lambda_star} The values of lambda* per individual.
-
-\code{theta_star} The values of theta* per individual.
-
-\code{other} An object of class \verb{3slvar_step2}, which is a list containing information on the names of the \code{factors}, \code{indicators}, and the ID variable (\code{id_var}).
+An object of class \verb{3slvar_step2}, which is a list comprising the following elements:
+\item{data}{The original data set with the appended factor scores.}
+\item{lambda_star}{A data frame containing the values of lambda* per individual.}
+\item{theta_star}{A data frame containing the values of theta* per individual.}
+\item{other}{A list containing information on the names of the \code{factors}, \code{indicators}, and the ID variable (\code{id_var}).}
 }
 \description{
 This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to \code{\link[=step3]{step3()}}.

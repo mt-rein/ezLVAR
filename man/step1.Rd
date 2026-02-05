@@ -31,7 +31,11 @@ Can be a list of strings determining the measurement blocks (e.g., one string fo
 \item{...}{Arguments to be passed on to \code{\link[lavaan:cfa]{lavaan::cfa()}}.}
 }
 \value{
-An object of class \verb{3slvar_step1}, which is a list comprising the output of the measurement model estimation (\code{mm_output}), the original data set (\code{data}), the measurement model (\code{measurementmodel}), and the ID variable (\code{id_var}).
+An object of class \verb{3slvar_step1}, which is a list comprising the following elements:
+\item{mm_output}{the output of the measurement model estimation.}
+\item{data}{the original data set as supplied to the function.}
+\item{measurementmodel}{the measurement model as supplied to the function.}
+\item{id_var}{the name of the ID variable as supplied to the function.}
 }
 \description{
 This function performs step 1 of 3S-LVAR: the estimation of the measurement model. It is a wrapper function around \code{lavaan::cfa()}.

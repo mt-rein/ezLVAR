@@ -81,27 +81,21 @@ step3(
 \item{verbose}{Logical (FALSE by default). If TRUE, print progress messages.}
 }
 \value{
-If \code{mixture = FALSE}, returns a fitted \code{MxModel} object.
-
-If \code{mixture = TRUE}, returns an object of class \verb{3slvar_step3mix}, which is a list containing the following elements:
-
-\code{estimates} A list of vectors (one for each cluster) that contain the parameter estimates in the best model.
-
-\code{SEs} A list of vectors (one for each cluster) that contain the standard errors in the best model.
-
-\code{model} A list of fitted \code{MxModel} objects (one for each cluster).
-
-\code{loglik} The observed data log likelihood of the best model.
-
-\code{posterior_probabilities} A data.frame with the posterior probabilities per person per cluster in the best model, and their modal cluster assignment (i.e., for which cluster they have the highest posterior probability).
-
-\code{class_proportions} The class proportions (prior probabilities) in the best model.
-
-\code{n_nonconverged} The number of starts that did not converge in Phase 2.
-
-\code{seeds} A vector containing the seeds per random start.
-
-\code{best_seed} The seed of the best random start.
+Returns an object of class \verb{3slvar_step3mix}, which is a list containing the following elements:
+\item{type}{A character string indicating the type of model that was fitted. Either "single-group", "multi-group", or "mixture".}
+\item{estimates}{A matrix containing the parameter estimates (per group/cluster, if applicable). The rows correspond to the groups/clusters and the columns correspond to the parameters.}
+\item{standarderrors}{A matrix containing the standard errors of the parameter estimates (per group/cluster, if applicable). The rows correspond to the groups/clusters and the columns correspond to the parameters.}
+\item{model}{A fitted \code{MxModel} object. In the case of mixture model, a list of \code{MxModel} objects (one for each cluster).}
+\item{duration}{The time it took to fit the model (in seconds).}
+\item{logLik}{The observed data log likelihood of the fitted model.}
+\item{posterior_probabilities}{A data frame with the posterior probabilities per person per cluster in the best model, and their modal cluster assignment (i.e., for which cluster they have the highest posterior probability). Only used if \code{mixture = TRUE}.}
+\item{class_proportions}{The class proportions (prior probabilities) in the best model. Only used if \code{mixture = TRUE}.}
+\item{n_groups}{The number of groups/clusters in the fitted model.}
+\item{n_persons}{The number of persons in the data.}
+\item{n_parameters}{The number of parameters in the fitted model.}
+\item{n_nonconverged}{The number of starts that did not converge in Phase 2. Only used if \code{mixture = TRUE}.}
+\item{seeds}{A vector containing the seeds per random start. Only used if \code{mixture = TRUE}.}
+\item{best_seed}{The seed of the best random start. Only used if \code{mixture = TRUE}.}
 }
 \description{
 This function performs Step 3 of 3S-LVAR: Estimate the Structural Model using the factor scores as single indicators while accounting for their inherent uncertainty.
