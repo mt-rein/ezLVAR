@@ -1,0 +1,160 @@
+#' Convex hull model selection for mixture Step 3 models
+#'
+#' This function performs model selection using the convex hull approach.
+#' Models with increasing complexity (number of clusters) are compared based on
+#' the log likelihood or a specified information criterion, and only models lying
+#' on the convex hull of the fit-versus-complexity curve are retained. Scree-test
+#' values are computed for the models on the hull, and the model with the highest
+#' scree-test value is selected as the optimal model.
+#'
+#' @references Wilderjans, T.F., Ceulemans, E. & Meers, K. CHull: A generic convex-hull-based model selection method. Behav Res 45, 1–15 (2013). https://doi.org/10.3758/s13428-012-0238-5
+#'
+#' @param model_list A list of objects obtained with the `step3()` function.
+#' @param criterion Character string indicating which model fit index to use.
+#'   Must be one of \code{"logLik"}, \code{"AIC"}, \code{"AIC3"},
+#'   \code{"BIC"}, or \code{"ICL"}.
+#'
+#' @return A list with:
+#' \item{df_all}{A data frame of all models with fit values and merged scree-test values.}
+#' \item{df_hull}{A data frame with the models on the convex hull and their scree-test values.}
+#' \item{criterion}{The fit criterion used.}
+
+#'
+#' @export
+
+CHull <- function(model_list, criterion = "logLik") {
+  ## errors:
+  if(!is.list(model_list) || !all(sapply(model_list, function(x) inherits(x, "3slvar_step3")))) {
+    stop("model_list must be a list of objects obtained with the step3() function.")
+  }
+
+  if (!(criterion %in% c("logLik", "AIC", "AIC3", "BIC", "ICL"))) {
+    stop("criterion must be one of 'logLik', 'AIC', 'AIC3', 'BIC', or 'ICL'")
+  }
+
+  if (length(model_list) < 3) {
+    stop("model_list must contain at least three models for CHull analysis.")
+  }
+
+  # sort the models by n_groups (in case the user just creates the list in random order)
+  idx <- model_list |>
+    purrr::map_int(~ .x[["n_groups"]]) |>
+    order()
+  model_list_sorted <- model_list[idx]
+
+  # create dataframe with n_clusters, n_par, and fit_values (for the specified criterion)
+  n_clusters <- sapply(model_list_sorted, function(x) x$n_groups)
+  fit_values <- sapply(model_list_sorted, function(x) {
+    fitind <- fit_indices(x)
+    fitind[[criterion]]
+  })
+  n_par <- sapply(model_list_sorted, function(x) x$n_parameters)
+  fit_values <- sapply(model_list_sorted, function(x) x$BIC)
+
+  df <- data.frame(n_clusters = n_clusters,
+                   n_par = n_par,
+                   fit_values = fit_values)
+  plot(df$n_par, df$fit_values, type = "b", xlab = "Number of parameters", ylab = criterion)
+
+  ## Step 3: compare models pairwise, remove models with worse fit than a simpler model
+  # (i.e., obtain monotonic increase/decrease in fit_values)
+
+  include <- rep(TRUE, nrow(df))
+  if (criterion == "logLik") {
+    # for logLik, higher is better, so exclude models where fit_values decreases with increasing n_par
+    # pairwise comparison:
+    for (i in 1:(nrow(df) - 1)) {
+      for(j in (i + 1):(nrow(df))) {
+        if(df$fit_values[j] >= df$fit_values[i]) {
+          include[j] <- FALSE
+        }
+      }
+    }
+  } else {
+    # for AIC, BIC, etc., lower is better, so exclude models where fit_values increases with increasing n_par
+    # pairwise comparison:
+    for (i in 1:(nrow(df) - 1)) {
+      for(j in (i + 1):(nrow(df))) {
+        if(df$fit_values[i] <= df$fit_values[j]) {
+          include[j] <- FALSE
+        }
+      }
+    }
+  }
+  df_hull <- df[include, ]
+
+  ## Step 4: exclude models that are not part of the convex hull
+  change <- TRUE
+  n_models0 <- nrow(df_hull)
+  # iterate while there was a change in the previous iteration (i.e., a model was removed)
+  # and if enough models remain
+  while (change && n_models0 > 2) {
+    # how many models remain before this iteration?
+    n_models0 <- nrow(df_hull)
+    change <- FALSE
+    include <- rep(TRUE, nrow(df_hull))
+    for (i in 2:(nrow(df_hull) - 1)) {
+      # get the previous, current, and next model's n_par (c) and fit_values (f)
+      c_prev <- df_hull$n_par[i - 1]
+      c_i <- df_hull$n_par[i]
+      c_next <- df_hull$n_par[i + 1]
+      f_prev <- df_hull$fit_values[i - 1]
+      f_i <- df_hull$fit_values[i]
+      f_next <- df_hull$fit_values[i + 1]
+
+      # check if model i is above/below the line connecting the previous and the next model
+      if (criterion == "logLik") {
+        # for logLik, higher is better
+        check <- f_i > f_prev + (c_i - c_prev)*(f_next - f_prev) / (c_next - c_prev)
+      } else {
+        # for AIC, BIC, etc., lower is better
+        check <- f_i < f_prev + (c_i - c_prev)*(f_next - f_prev) / (c_next - c_prev)
+      }
+
+      if(!check) {
+        # if model is not on the convex hull, remove it
+        include[i] <- FALSE
+      }
+    }
+    df_hull <- df_hull[include, ]
+    # check if a model was removed:
+    if (nrow(df_hull) < n_models0) {
+      change <- TRUE
+    }
+  }
+
+  ## Step 5: compute scree_test values for models on the convex hull if enough  models remain
+  scree_test <- rep(NA, nrow(df_hull))
+  # check if enough models (3 or more) remain:
+  if (nrow(df_hull) >= 3) {
+    # if there are enough models, compute scree_test
+    for (i in 2:(nrow(df_hull) - 1)) {
+      # get the previous, current, and next model's n_par (c) and fit_values (f)
+      c_prev <- df_hull$n_par[i - 1]
+      c_i <- df_hull$n_par[i]
+      c_next <- df_hull$n_par[i + 1]
+      f_prev <- df_hull$fit_values[i - 1]
+      f_i <- df_hull$fit_values[i]
+      f_next <- df_hull$fit_values[i + 1]
+
+      scree_test[i] <- ((f_i - f_prev) / (c_i - c_prev)) / ((f_next - f_i) / (c_next - c_i))
+    }
+  } else {
+    # if not, print warning and do not compute scree_test
+    warning("There are fewer than 3 models on the convex hull. Scree-test values are not computed")
+  }
+
+  df_hull$scree_test <- scree_test
+
+  # rename fit_values column to whatever criterion was used:
+  colnames(df_hull)[colnames(df_hull) == "fit_values"] <- criterion
+  colnames(df)[colnames(df) == "fit_values"] <- criterion
+
+  df <- merge(df, df_hull[, c("n_clusters", "scree_test")], by = "n_clusters", all.x = TRUE)
+
+  out <- list(df_all = df,
+              df_hull = df_hull,
+              criterion = criterion)
+
+  return(out)
+}
