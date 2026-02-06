@@ -1,10 +1,10 @@
 #' Creates a Regression Effects Matrix
 #'
 #' @description
-#' This is a helper function to create the A matrix, which is required to specify the structural model for [step3()].
+#' This is a helper function to create the A matrix, which is required to specify the structural model for [step3].
 #' The A matrix describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects.
 #'
-#' @param step2output The output obtained with the [step2()] function.
+#' @param step2output An object obtained with the [step2] function.
 #' @param startvalues A square matrix that represents the starting values for each parameter. The number of rows/columns must be equal to the number of latent factors in the model.
 #' @param random_intercept Logical. If TRUE, the matrices `startvalues`, `free`, `labels`, `lbound`, and `ubound` are expanded to accommodate the specification of a random intercept.
 #' @param free A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If `NULL`, all regression effects are freely estimated. If not `NULL`, the matrix must have the same dimensions as `startvalues`.

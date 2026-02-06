@@ -2,12 +2,17 @@
 % Please edit documentation in R/step2.R
 \name{step2}
 \alias{step2}
+\alias{summary.3slvar_step2}
 \title{Step 2: Obtain Factor Scores}
 \usage{
 step2(step1output)
+
+\method{summary}{`3slvar_step2`}(step2output)
 }
 \arguments{
-\item{step1output}{The output obtained with the \code{step1()} function.}
+\item{step1output}{An object obtained with the \link{step1} function.}
+
+\item{step2output}{An object obtained with the \link{step2} function.}
 }
 \value{
 An object of class \verb{3slvar_step2}, which is a list comprising the following elements:
@@ -17,5 +22,5 @@ An object of class \verb{3slvar_step2}, which is a list comprising the following
 \item{other}{A list containing information on the names of the \code{factors}, \code{indicators}, and the ID variable (\code{id_var}).}
 }
 \description{
-This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to \code{\link[=step3]{step3()}}.
+This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to \link{step3}.
 }

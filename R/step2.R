@@ -1,8 +1,9 @@
+#### Step 2 Core function ####
 #' Step 2: Obtain Factor Scores
 #' @description
-#' This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to [step3()].
+#' This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to [step3].
 #'
-#' @param step1output The output obtained with the `step1()` function.
+#' @param step1output An object obtained with the [step1] function.
 #'
 #' @returns An object of class `3slvar_step2`, which is a list comprising the following elements:
 #' \item{data}{The original data set with the appended factor scores.}
@@ -175,4 +176,46 @@ step2 <- function(step1output) {
   )
   class(output) <- "3slvar_step2"
   return(output)
+}
+
+#### summary function ####
+#' @param step2output An object obtained with the [step2] function.
+#'
+#' @rdname step2
+#'
+#' @export
+summary.3slvar_step2 <- function(step2output) {
+  factors <- step2output$other$factors
+
+  descriptives_lambdastar <- data.frame(factor = character(),
+                                        average = numeric(),
+                                        min = numeric(),
+                                        max = numeric())
+  for (i in 1:length(factors)) {
+    fac <- factors[i]
+    average <- mean(step2output$lambda_star[[fac]]) |> round(2)
+    minimum <- min(step2output$lambda_star[[fac]]) |> round(2)
+    maximum <- max(step2output$lambda_star[[fac]]) |> round(2)
+    descriptives_lambdastar[i, ] <- c(fac, average, minimum, maximum)
+  }
+
+  descriptives_thetastar <- data.frame(factor = character(),
+                                       average = numeric(),
+                                       min = numeric(),
+                                       max = numeric())
+  for (i in 1:length(factors)) {
+    fac <- factors[i]
+    average <- mean(step2output$theta_star[[fac]]) |> round(2)
+    minimum <- min(step2output$theta_star[[fac]]) |> round(2)
+    maximum <- max(step2output$theta_star[[fac]]) |> round(2)
+    descriptives_thetastar[i, ] <- c(fac, average, minimum, maximum)
+  }
+
+  cat("Descriptives for Lambda* (model-based reliability)\n")
+  print(descriptives_lambdastar)
+  cat("\n")
+  cat("Descriptives for Theta* (residual variance in the factor scores):\n")
+  print(descriptives_thetastar)
+
+  invisible(step2output)
 }

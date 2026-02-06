@@ -1,12 +1,13 @@
+#### Step 3 core function ####
 #' Step 3: Estimate the Structural Model
 #'
 #' @description
 #' This function performs Step 3 of 3S-LVAR: Estimate the Structural Model using the factor scores as single indicators while accounting for their inherent uncertainty.
 #' The estimation is implemented in the State Space Model framework in `OpenMx`.
 #'
-#' @param step2output The output obtained with the `step2()` function.
-#' @param A An `OpenMx` matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See [OpenMx::mxExpectationStateSpace]. The helper function [create_A()] is available to create this object.
-#' @param Q An `OpenMx` matrix object that describes the innovation covariance matrix. See [OpenMx::mxExpectationStateSpace]. The helper function [create_Q()] is available to create this object.
+#' @param step2output An object obtained with the [step2] function.
+#' @param A An `OpenMx` matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See [OpenMx::mxExpectationStateSpace]. The helper function [create_A] is available to create this object.
+#' @param Q An `OpenMx` matrix object that describes the innovation covariance matrix. See [OpenMx::mxExpectationStateSpace]. The helper function [create_Q] is available to create this object.
 #' @param B An `OpenMx` matrix object that describes the covariate effects on the latent variables. Optional. If `NULL`, a zero matrix (i.e., no covariate effects) is automatically created.
 #' @param D An `OpenMx` matrix object that describes the covariate effects on the observed items. Optional. If `NULL`, a zero matrix (i.e., no covariate effects) is automatically created.
 #' @param x0 An `OpenMx` matrix object that describes the initial latent variable vector that initiates the Kalman Filter. Optional. If `NULL`, an object is automatically created where all values are fixed to 0.
@@ -25,7 +26,7 @@
 #' @param parallel Logical. If TRUE, parallel processing is used. Only used if `mixture = TRUE`.
 #' @param n_cores Numerical. number of cores to use when `parallel = TRUE`. If `NULL`, two cores are kept free for other tasks.
 #' @param seeds A numerical vector containing the starting seeds for each random start. Optional. If `NULL`, random seeds are automatically generated.  Only used if `mixture = TRUE`.
-#' @param newdata A data frame. Note that the output of `step2()` already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers). Optional.
+#' @param newdata A data frame. Note that the output of `step2` already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers). Optional.
 #' @param tryhard Should the algorithm run multiple times to obtain a solution (see [OpenMx::mxTryHard])? Does not work in conjunction with mixture modeling.
 #' @param verbose Logical (FALSE by default). If TRUE, print progress messages.
 #'
@@ -317,7 +318,7 @@ step3 <- function(step2output, A, Q,
     ## type, n_groups, estimates, and SEs (depending on single- or multi-group)
     if(is.null(group_var)) {
       output[["type"]] <- "single-group"
-      output[["n_groups"]] <- 1
+      output[["n_groups"]] <- 1L
 
       ## estimates and SEs:
       output[["estimates"]] <- OpenMx::omxGetParameters(fullmodelr)
@@ -326,7 +327,7 @@ step3 <- function(step2output, A, Q,
     } else {
       output[["type"]] <- "multi-group"
       groups <- unique(data[[group_var]])
-      output[["n_groups"]] <- length(groups)
+      output[["n_groups"]] <- length(groups) |> as.integer()
 
       estimates_raw <- OpenMx::omxGetParameters(fullmodelr)
       estimates <- lapply(groups, function(g) {
@@ -352,7 +353,7 @@ step3 <- function(step2output, A, Q,
     output[["model"]] <- fullmodelr
     output[["duration"]] <- duration
     output[["logLik"]] <- fullmodelr$output$Minus2LogLikelihood/(-2)
-    output[["n_persons"]] <- n_persons
+    output[["n_persons"]] <- n_persons |> as.integer()
     output[["n_parameters"]] <- length(OpenMx::omxGetParameters(fullmodelr))
   }
 
@@ -574,16 +575,26 @@ step3 <- function(step2output, A, Q,
     output[["type"]] <- "mixture"
     output[["model"]] <- final_model
     output[["logLik"]] <- observed_data_LL
-    output[["n_groups"]] <- n_clusters
-    output[["n_persons"]] <- n_persons
-    output[["n_parameters"]] <- n_clusters - 1 + nrow(estimates)*n_clusters
+    output[["n_groups"]] <- n_clusters |> as.integer()
+    output[["n_persons"]] <- n_persons |> as.integer()
+    output[["n_parameters"]] <- (n_clusters - 1 + ncol(estimates)*n_clusters) |> as.integer()
     convergence_counter <- results_phase2 |>
       purrr::map_lgl(~ .x$converged)
-    output[["n_nonconverged"]] <- sum(!convergence_counter)
+    output[["n_nonconverged"]] <- sum(!convergence_counter) |> as.integer()
     output[["seeds"]] <- seeds
     output[["best_seed"]] <- selected_start$seed
   }
 
   class(output) <- "3slvar_step3"
   return(output)
+}
+
+#### summary function ####
+#' @param step3output An object obtained with the [step3] function.
+#'
+#' @rdname step3
+#'
+#' @export
+summary.3slvar_step3 <- function(object) {
+  step3output
 }

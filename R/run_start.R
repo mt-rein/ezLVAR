@@ -1,3 +1,5 @@
+# Internal functions to run a single start of the EM algorithm in step3
+
 #### run_start (internal helper) ####
 # perform a single random start in either Phase 1 or Phase 2
 run_start <- function(input_list,

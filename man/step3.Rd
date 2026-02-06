@@ -2,6 +2,7 @@
 % Please edit documentation in R/step3.R
 \name{step3}
 \alias{step3}
+\alias{summary.3slvar_step3}
 \title{Step 3: Estimate the Structural Model}
 \usage{
 step3(
@@ -30,13 +31,15 @@ step3(
   tryhard = FALSE,
   verbose = TRUE
 )
+
+\method{summary}{`3slvar_step3`}(object)
 }
 \arguments{
-\item{step2output}{The output obtained with the \code{step2()} function.}
+\item{step2output}{An object obtained with the \link{step2} function.}
 
-\item{A}{An \code{OpenMx} matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \code{\link[=create_A]{create_A()}} is available to create this object.}
+\item{A}{An \code{OpenMx} matrix object that describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \link{create_A} is available to create this object.}
 
-\item{Q}{An \code{OpenMx} matrix object that describes the innovation covariance matrix. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \code{\link[=create_Q]{create_Q()}} is available to create this object.}
+\item{Q}{An \code{OpenMx} matrix object that describes the innovation covariance matrix. See \link[OpenMx:mxExpectationStateSpace]{OpenMx::mxExpectationStateSpace}. The helper function \link{create_Q} is available to create this object.}
 
 \item{B}{An \code{OpenMx} matrix object that describes the covariate effects on the latent variables. Optional. If \code{NULL}, a zero matrix (i.e., no covariate effects) is automatically created.}
 
@@ -74,11 +77,13 @@ step3(
 
 \item{seeds}{A numerical vector containing the starting seeds for each random start. Optional. If \code{NULL}, random seeds are automatically generated.  Only used if \code{mixture = TRUE}.}
 
-\item{newdata}{A data frame. Note that the output of \code{step2()} already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers). Optional.}
+\item{newdata}{A data frame. Note that the output of \code{step2} already contains the data, so using this argument is only required if the data have been manipulated after step 2 (e.g., removing outliers). Optional.}
 
 \item{tryhard}{Should the algorithm run multiple times to obtain a solution (see \link[OpenMx:mxTryHard]{OpenMx::mxTryHard})? Does not work in conjunction with mixture modeling.}
 
 \item{verbose}{Logical (FALSE by default). If TRUE, print progress messages.}
+
+\item{step3output}{An object obtained with the \link{step3} function.}
 }
 \value{
 Returns an object of class \verb{3slvar_step3mix}, which is a list containing the following elements:

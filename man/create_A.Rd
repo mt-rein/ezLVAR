@@ -15,7 +15,7 @@ create_A(
 )
 }
 \arguments{
-\item{step2output}{The output obtained with the \code{\link[=step2]{step2()}} function.}
+\item{step2output}{An object obtained with the \link{step2} function.}
 
 \item{startvalues}{A square matrix that represents the starting values for each parameter. The number of rows/columns must be equal to the number of latent factors in the model.}
 
@@ -33,6 +33,6 @@ create_A(
 A An \code{OpenMx} matrix object that is entered into \code{\link[=step3]{step3()}}.
 }
 \description{
-This is a helper function to create the A matrix, which is required to specify the structural model for \code{\link[=step3]{step3()}}.
+This is a helper function to create the A matrix, which is required to specify the structural model for \link{step3}.
 The A matrix describes the regression coefficients in the State Space model. Diagonal entries represent autoregressive effects, and off-diagonal entries represent cross-lagged effects.
 }

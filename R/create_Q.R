@@ -1,11 +1,11 @@
 #' Creates an Innovation Covariance Matrix
 #'
 #' @description
-#' This is a helper function to create the Q matrix, which is required to specify the structural model for [step3()].
+#' This is a helper function to create the Q matrix, which is required to specify the structural model for [step3].
 #' The Q matrix describes the innovation (co)variances (i.e., the residuals of the latent variables).
 #'
 #'
-#' @param step2output The output obtained with the [step2()] function.
+#' @param step2output An object obtained with the [step2] function.
 #' @param startvalues A square matrix that represents the starting values for each parameter. The number of rows/columns must be equal to the number of latent factors in the model.
 #' @param random_intercept Logical. If TRUE, the matrices `startvalues`, `free`, `labels`, `lbound`, and `ubound` are automatically expanded to accommodate the specification a random intercept.
 #' @param free A matrix of TRUE and FALSE values that indicates which parameters are freely estimated. Optional. If `NULL`, all variances and covariances are freely estimated. If not `NULL`, the matrix must have the same dimensions as `startvalues`.
