@@ -20,31 +20,42 @@ step1(
 \arguments{
 \item{data}{A data frame.}
 
-\item{measurementmodel}{A string describing the measurement model using the \code{lavaan} syntax.
-Can be a list of strings determining the measurement blocks (e.g., one string for the MM of factor 1, and a second string for the MM of factor 2).}
+\item{measurementmodel}{A string describing the measurement model using the
+\code{lavaan} syntax. Can be a list of strings determining the measurement
+blocks (e.g., one string for the MM of factor 1, and a second string for
+the MM of factor 2).}
 
 \item{id_var}{String containing the name of the ID variable.}
 
-\item{group_var}{String containing the name of the grouping variable. Optional.}
+\item{group_var}{String containing the name of the grouping variable.
+Optional.}
 
-\item{invariances}{Character vector containing the parameters constrained to equality across groups (cf. the \code{group.equal} argument in \code{lavaan}). Optional.}
+\item{invariances}{Character vector containing the parameters constrained to
+equality across groups (cf. the \code{group.equal} argument in \code{lavaan}).
+Optional.}
 
-\item{partial_noninvariances}{Character vector containing the non-invariances of the model (cf. the \code{group.partial} argument in \code{lavaan}). Optional. Must be a list of strings if \code{measurementmodel} is a list (e.g., one string for block 1, and a second string for block 2).}
+\item{partial_noninvariances}{Character vector containing the non-invariances
+of the model (cf. the \code{group.partial} argument in \code{lavaan}). Optional. Must
+be a list of strings if \code{measurementmodel} is a list (e.g., one string for
+block 1, and a second string for block 2).}
 
 \item{...}{Arguments that are forwarded to \code{lavaan::summary()}.}
 
 \item{step1output}{An object obtained with the \link{step1} function.}
 
-\item{print_MM_summary}{Should the summary of the estimated measurement models be printed (i.e, call \code{lavaan::summary} on all blocks?}
+\item{print_MM_summary}{Should the summary of the estimated measurement
+models be printed (i.e, call \code{lavaan::summary} on all blocks?}
 }
 \value{
-An object of class \verb{3slvar_step1}, which is a list comprising the following elements:
-\item{mm_output}{the output of the measurement model estimation.}
-\item{data}{the original data set as supplied to the function.}
-\item{measurementmodel}{the measurement model as supplied to the function.}
-\item{id_var}{the name of the ID variable as supplied to the function.}
+An object of class \verb{3slvar_step1}, which is a list comprising the
+following elements: \item{mm_output}{the output of the measurement model
+estimation.} \item{data}{the original data set as supplied to the
+function.} \item{measurementmodel}{the measurement model as supplied to the
+function.} \item{id_var}{the name of the ID variable as supplied to the
+function.}
 }
 \description{
-This function performs step 1 of 3S-LVAR: the estimation of the measurement model. It is a wrapper function around \link[lavaan:cfa]{lavaan::cfa}.
-Its output will be passed on to \link{step2}.
+This function performs step 1 of 3S-LVAR: the estimation of the
+measurement model. It is a wrapper function around \link[lavaan:cfa]{lavaan::cfa}. Its
+output will be passed on to \link{step2}.
 }

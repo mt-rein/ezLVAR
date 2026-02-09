@@ -10,7 +10,8 @@ get_data(step2output)
 \item{step2output}{An object obtained with the \link{step2} function.}
 }
 \value{
-data The data as they were supplied to the \link{step1} function, with appended factor scores.
+data The data as they were supplied to the \link{step1} function, with
+appended factor scores.
 }
 \description{
 Extract the data with factor scores

@@ -7,16 +7,18 @@
 fit_indices(step3output)
 }
 \arguments{
-\item{step3output}{An object obtained with the \link{step3} function that includes a mixture model (i.e., \code{mixture = TRUE}).}
+\item{step3output}{An object obtained with the \link{step3} function that includes
+a mixture model (i.e., \code{mixture = TRUE}).}
 }
 \value{
 A named vector of numeric values.
 }
 \description{
-Computes likelihood based fit indices for a Step 3 model: log-likelihood, AIC,
-AIC3, BIC, and ICL (only for mixture models).
+Computes likelihood based fit indices for a Step 3 model:
+log-likelihood, AIC, AIC3, BIC, and ICL (only for mixture models).
 }
 \references{
 J.K. Vermunt and J. Magidson (2016). Technical Guide for Latent
-GOLD 5.1: Basic, Advanced, and Syntax. Belmont, MA: Statistical Innovations Inc.
+GOLD 5.1: Basic, Advanced, and Syntax. Belmont, MA: Statistical Innovations
+Inc.
 }

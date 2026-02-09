@@ -2,18 +2,19 @@
 
 #### run_start (internal helper) ####
 # perform a single random start in either Phase 1 or Phase 2
-run_start <- function(input_list,
-                      personmodel_list,
-                      n_clusters,
-                      n_factors,
-                      n_persons,
-                      phase,
-                      stablecluster_criterion,
-                      convergence_criterion,
-                      GEM_iterations,
-                      maxit,
-                      verbose) {
-
+run_start <- function(
+  input_list,
+  personmodel_list,
+  n_clusters,
+  n_factors,
+  n_persons,
+  phase,
+  stablecluster_criterion,
+  convergence_criterion,
+  GEM_iterations,
+  maxit,
+  verbose
+) {
   # set seed:
   seed <- input_list$seed
   set.seed(seed)
@@ -42,7 +43,6 @@ run_start <- function(input_list,
     clustermodels_run <- input_list$clustermodels_run
   }
 
-
   # create list with names of objective functions (needed in M-Step)
   objectives <- sapply(personmodel_list, function(x) x@name) |>
     as.character() |>
@@ -51,14 +51,20 @@ run_start <- function(input_list,
   stable_clustering <- FALSE
 
   #### EM Loop ####
-  # loop over iterations until stable clustering is achieved or max iterations are reached
+
+  # loop over iterations until stable clustering is achieved or max iterations
+  # are reached
   for (it in 1:maxit) {
     #### E-step: update class membership and class proportions ####
     if (phase == 1 && it > 1) {
       post0 <- post
       # update posteriors:
-      post <- EStep(pi_ks = class_proportions, ngroup = n_persons,
-                    nclus = n_clusters, loglik = personLL)
+      post <- EStep(
+        pi_ks = class_proportions,
+        ngroup = n_persons,
+        nclus = n_clusters,
+        loglik = personLL
+      )
 
       # compute (absolute) differences in posteriors
       delta <- abs(post - post0)
@@ -72,8 +78,12 @@ run_start <- function(input_list,
 
     if (phase == 2) {
       # update posteriors:
-      post <- EStep(pi_ks = class_proportions, ngroup = n_persons,
-                    nclus = n_clusters, loglik = personLL)
+      post <- EStep(
+        pi_ks = class_proportions,
+        ngroup = n_persons,
+        nclus = n_clusters,
+        loglik = personLL
+      )
     }
 
     # compute class proportions:
@@ -86,40 +96,51 @@ run_start <- function(input_list,
         purrr::map(OpenMx::omxGetParameters)
     } else {
       # in the first iteration, generate random start values in each cluster
-      startvalues <- generate_startvalues(n_clusters = n_clusters,
-                                          n_factors = n_factors,
-                                          personmodel_list = personmodel_list)
+      startvalues <- generate_startvalues(
+        n_clusters = n_clusters,
+        n_factors = n_factors,
+        personmodel_list = personmodel_list
+      )
     }
-
 
     # create one multi-group (i.e., multi-subject) model per cluster
     # person-models are weighted by their posterior probabilities
     clustermodels <- vector(mode = "list", length = n_clusters)
     for (k in 1:n_clusters) {
       clustername <- paste0("model_k", k)
-      weighted_objectives <- paste(post[, k], "*", objectives,
-                                   collapse = " + ")
-      model_k <- OpenMx::mxModel(clustername, personmodel_list,
-                                 OpenMx::mxAlgebraFromString(weighted_objectives,
-                                                             name = "weightedfit"),
-                                 OpenMx::mxFitFunctionAlgebra("weightedfit"))
+      weighted_objectives <- paste(post[, k], "*", objectives, collapse = " + ")
+      model_k <- OpenMx::mxModel(
+        clustername,
+        personmodel_list,
+        OpenMx::mxAlgebraFromString(weighted_objectives, name = "weightedfit"),
+        OpenMx::mxFitFunctionAlgebra("weightedfit")
+      )
       # add start values:
-      model_k <- OpenMx::omxSetParameters(model_k,
-                                          labels = names(startvalues[[k]]),
-                                          values = startvalues[[k]])
+      model_k <- OpenMx::omxSetParameters(
+        model_k,
+        labels = names(startvalues[[k]]),
+        values = startvalues[[k]]
+      )
 
       # change options (skip computation of hessian and SEs)
-      model_k <- OpenMx::mxOption(model_k,
-                                  key = "Calculate Hessian",
-                                  value = "No")
-      model_k <- OpenMx::mxOption(model_k,
-                                  key = "Standard Errors",
-                                  value = "No")
-      # if stable clustering has not yet been achieved in phase 1, reduce iterations
+      model_k <- OpenMx::mxOption(
+        model_k,
+        key = "Calculate Hessian",
+        value = "No"
+      )
+      model_k <- OpenMx::mxOption(
+        model_k,
+        key = "Standard Errors",
+        value = "No"
+      )
+      # if stable clustering has not yet been achieved in phase 1, reduce
+      # iterations
       if (phase == 1 && !stable_clustering) {
-        model_k <- OpenMx::mxOption(model_k,
-                                    key = "Major iterations",
-                                    value = GEM_iterations)
+        model_k <- OpenMx::mxOption(
+          model_k,
+          key = "Major iterations",
+          value = GEM_iterations
+        )
       }
 
       clustermodels[[k]] <- model_k
@@ -128,15 +149,14 @@ run_start <- function(input_list,
 
     # run the models
     clustermodels_run <- clustermodels |>
-      purrr::map(OpenMx::mxRun,
-                 silent = TRUE,
-                 suppressWarnings = TRUE)
+      purrr::map(OpenMx::mxRun, silent = TRUE, suppressWarnings = TRUE)
 
     # obtain person-wise LL in a n_persons x n_clusters matrix:
     personLL <- clustermodels_run |>
       # loop over all clusters
       purrr::map(function(clustermodel) {
-        # loop over all persons per cluster and extract the person-wise fit function value
+        # loop over all persons per cluster and extract the person-wise fit
+        # function value
         purrr::map_dbl(clustermodel$submodels, function(personmodel) {
           personmodel$fitfunction$result
         })
@@ -146,8 +166,10 @@ run_start <- function(input_list,
     # openMx gives the minus2LL, so we divide by minus 2
 
     # compute observed-data log likelihood from person-wise LL:
-    observed_data_LL <- compute_observed_data_LL(personLL = personLL,
-                                                 class_proportions = class_proportions)
+    observed_data_LL <- compute_observed_data_LL(
+      personLL = personLL,
+      class_proportions = class_proportions
+    )
 
     LL_change <- observed_data_LL - observed_data_LL0
 
@@ -170,13 +192,15 @@ run_start <- function(input_list,
   }
 
   # save relevant objects in list:
-  output <- list("observed_data_LL" = observed_data_LL,
-                 "post" = post,
-                 "class_proportions" = class_proportions,
-                 "personLL" = personLL,
-                 "clustermodels_run" = clustermodels_run,
-                 "seed" = seed,
-                 "converged" = converged)
+  output <- list(
+    "observed_data_LL" = observed_data_LL,
+    "post" = post,
+    "class_proportions" = class_proportions,
+    "personLL" = personLL,
+    "clustermodels_run" = clustermodels_run,
+    "seed" = seed,
+    "converged" = converged
+  )
 
   return(output)
 }
@@ -184,7 +208,6 @@ run_start <- function(input_list,
 #### EStep (internal helper) ####
 # perform the E-Step of the EM algorithm
 EStep <- function(pi_ks, ngroup, nclus, loglik) {
-
   max_g <- rep(0, ngroup)
   z_gks <- matrix(NA, nrow = ngroup, ncol = nclus)
 
@@ -232,8 +255,7 @@ generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
 
     # generate a positive definitive matrix of innovation (co)variances
     noise_multi <- stats::runif(length(values_phi), 0.5, 1.5)
-    zetastart <- matrix(values_zeta*noise_multi,
-                        nrow = n_factors)
+    zetastart <- matrix(values_zeta * noise_multi, nrow = n_factors)
     zetastartPD <- Matrix::nearPD(zetastart)$mat |> as.matrix()
 
     startvalues[[k]] <- c(

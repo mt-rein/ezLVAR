@@ -7,19 +7,22 @@
 r2_entropy(step3output)
 }
 \arguments{
-\item{step3output}{An object obtained with the \link{step3} function that includes a mixture model (i.e., \code{mixture = TRUE}).}
+\item{step3output}{An object obtained with the \link{step3} function that includes
+a mixture model (i.e., \code{mixture = TRUE}).}
 }
 \value{
 A numeric value.
 }
 \description{
-Computes the R-squared entropy index for a mixture model, which quantifies
-the proportional reduction in classification uncertainty gained from using
-posterior class probabilities instead of prior class proportions. A value
-close to 1 indicates high classification certainty, whereas a value close
-to 0 indicates substantial uncertainty in class assignments.
+Computes the R-squared entropy index for a mixture model, which
+quantifies the proportional reduction in classification uncertainty gained
+from using posterior class probabilities instead of prior class
+proportions. A value close to 1 indicates high classification certainty,
+whereas a value close to 0 indicates substantial uncertainty in class
+assignments.
 }
 \references{
 J.K. Vermunt and J. Magidson (2016). Technical Guide for Latent
-GOLD 5.1: Basic, Advanced, and Syntax. Belmont, MA: Statistical Innovations Inc.
+GOLD 5.1: Basic, Advanced, and Syntax. Belmont, MA: Statistical Innovations
+Inc.
 }

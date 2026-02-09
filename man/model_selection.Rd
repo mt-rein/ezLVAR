@@ -6,32 +6,50 @@
 \alias{plot.model_selection}
 \title{Model selection for Step 3 mixture models}
 \usage{
-model_selection(model_list, CHull_criterion = "logLik")
+model_selection(model_list, use_CHull = TRUE, CHull_criterion = "logLik")
 
-\method{summary}{model_selection}(object, ...)
+\method{summary}{model_selection}(object, round_digits = 3)
 
 \method{plot}{model_selection}(object, criterion = c("AIC", "AIC3", "BIC", "ICL"))
 }
 \arguments{
-\item{model_list}{A list of objects obtained with the \link{step3} function. Each object must include a mixture model (i.e., \code{mixture = TRUE}) with a different number of clusters. The list can be in any order, but all models must have been fitted on the same data and with the same A and Q matrices.}
+\item{model_list}{A list of objects obtained with the \link{step3} function. Each
+object must include a mixture model (i.e., \code{mixture = TRUE}) with a
+different number of clusters. The list can be in any order, but all models
+must have been fitted on the same data and with the same A and Q matrices.}
 
-\item{CHull_criterion}{A character string specifying the criterion to use for the convex hull model selection. Must be one of: "logLik", "AIC", "AIC3", "BIC", or "ICL". Default is "logLik".}
+\item{use_CHull}{A logical value indicating whether to perform convex hull
+model selection. Default is TRUE. If FALSE, only the information criteria
+will be computed and compared.}
+
+\item{CHull_criterion}{A character string specifying the criterion to use for
+the convex hull model selection. Must be one of: "logLik", "AIC", "AIC3",
+"BIC", or "ICL". Default is "logLik".}
 
 \item{object}{An object obtained with the \link{model_selection} function.}
 
-\item{criterion}{A character vector specifying which criteria to plot. Must be one or more of: "AIC", "AIC3", "BIC", "ICL". Default is all four criteria.}
+\item{round_digits}{Numerical. The number of digits to round numeric values
+in the output. Default is 3.}
+
+\item{criterion}{A character vector specifying which criteria to plot. Must
+be one or more of: "AIC", "AIC3", "BIC", "ICL". Default is all four
+criteria.}
 }
 \value{
 A list of class "model_selection" with the following components:
-\item{selection_df}{A data frame with the number of clusters, information criteria, and scree-test values for each model.}
-\item{CHull_criterion}{The criterion used for the convex hull model selection.}
+\item{selection_df}{A data frame with the number of clusters, information
+criteria, and scree-test values for each model.}
+\item{CHull_criterion}{The criterion used for the convex hull model
+selection.}
 }
 \description{
-Compares multiple Step 3 mixture models with different numbers of clusters
-using various information criteria (log-likelihood, AIC, AIC3, BIC, ICL) and
-the convex hull method.
+Compares multiple Step 3 mixture models with different numbers
+of clusters using various information criteria (log-likelihood, AIC, AIC3,
+BIC, ICL) and the convex hull method.
 }
 \details{
-The \link{summary} function provides an overview of the model selection results, including which model is selected by each criterion.
-The \link{plot} function visualizes the information criteria across models, allowing for a visual comparison of model fit and complexity.
+The \link{summary} function provides an overview of the model selection
+results, including which model is selected by each criterion. The \link{plot}
+function visualizes the information criteria across models, allowing for a
+visual comparison of model fit and complexity.
 }

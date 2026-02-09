@@ -7,20 +7,26 @@
 \usage{
 step2(step1output)
 
-\method{summary}{`3slvar_step2`}(step2output)
+\method{summary}{`3slvar_step2`}(step2output, round_digits = 3)
 }
 \arguments{
 \item{step1output}{An object obtained with the \link{step1} function.}
 
 \item{step2output}{An object obtained with the \link{step2} function.}
+
+\item{round_digits}{Numerical. The number of digits to round numeric values
+in the output. Default is 3.}
 }
 \value{
-An object of class \verb{3slvar_step2}, which is a list comprising the following elements:
-\item{data}{The original data set with the appended factor scores.}
-\item{lambda_star}{A data frame containing the values of lambda* per individual.}
-\item{theta_star}{A data frame containing the values of theta* per individual.}
-\item{other}{A list containing information on the names of the \code{factors}, \code{indicators}, and the ID variable (\code{id_var}).}
+An object of class \verb{3slvar_step2}, which is a list comprising the
+following elements: \item{data}{The original data set with the appended
+factor scores.} \item{lambda_star}{A data frame containing the values of
+lambda* per individual.} \item{theta_star}{A data frame containing the
+values of theta* per individual.} \item{other}{A list containing
+information on the names of the \code{factors}, \code{indicators}, and the ID
+variable (\code{id_var}).}
 }
 \description{
-This function performs step 2 of 3S-LVAR: compute factor scores and their uncertainty. Its output will be passed on to \link{step3}.
+This function performs step 2 of 3S-LVAR: compute factor scores
+and their uncertainty. Its output will be passed on to \link{step3}.
 }
