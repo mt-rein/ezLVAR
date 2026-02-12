@@ -13,10 +13,9 @@ model_selection(model_list, use_CHull = TRUE, CHull_criterion = "logLik")
 \method{plot}{model_selection}(object, criterion = c("AIC", "AIC3", "BIC", "ICL"))
 }
 \arguments{
-\item{model_list}{A list of objects obtained with the \link{step3} function. Each
-object must include a mixture model (i.e., \code{mixture = TRUE}) with a
-different number of clusters. The list can be in any order, but all models
-must have been fitted on the same data and with the same A and Q matrices.}
+\item{model_list}{A list of objects obtained with the \link{step3} function. The
+list can be in any order, but all models must have been fitted on the same
+data and with the same A and Q matrices.}
 
 \item{use_CHull}{A logical value indicating whether to perform convex hull
 model selection. Default is TRUE. If FALSE, only the information criteria

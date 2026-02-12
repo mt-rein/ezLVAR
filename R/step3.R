@@ -442,7 +442,7 @@ step3 <- function(
       output[["standarderrors"]] <- fullmodelr$output$standardErrors[, 1]
     } else {
       output[["type"]] <- "multi-group"
-      groups <- unique(data[[group_var]])
+      groups <- stats::na.omit(data[[group_var]]) |> unique()
       output[["n_groups"]] <- length(groups) |> as.integer()
 
       estimates_raw <- OpenMx::omxGetParameters(fullmodelr)
@@ -815,7 +815,7 @@ summary.3slvar_step3 <- function(
   }
 
   cat(paste0(
-    "Estimation duration: ",
+    "\nEstimation duration: ",
     round(object$duration, round_digits),
     " seconds.\n"
   ))

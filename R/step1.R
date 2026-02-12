@@ -15,13 +15,14 @@
 #' @param id_var String containing the name of the ID variable.
 #' @param group_var String containing the name of the grouping variable.
 #'   Optional.
-#' @param invariances Character vector containing the parameters constrained to
+#' @param group.equal Character vector containing the parameters constrained to
 #'   equality across groups (cf. the `group.equal` argument in `lavaan`).
-#'   Optional.
-#' @param partial_noninvariances Character vector containing the non-invariances
-#'   of the model (cf. the `group.partial` argument in `lavaan`). Optional. Must
-#'   be a list of strings if `measurementmodel` is a list (e.g., one string for
-#'   block 1, and a second string for block 2).
+#'   Optional. Must be a list of strings if `measurementmodel` is a list (e.g.,
+#'   one string for block 1, and a second string for block 2).
+#' @param group.partial Character vector containing the non-invariances of the
+#'   model (cf. the `group.partial` argument in `lavaan`). Optional. Must be a
+#'   list of strings if `measurementmodel` is a list (e.g., one string for block
+#'   1, and a second string for block 2).
 #' @param ... Arguments to be passed on to [lavaan::cfa].
 #'
 #' @returns An object of class `3slvar_step1`, which is a list comprising the
@@ -37,31 +38,31 @@ step1 <- function(
   measurementmodel,
   id_var,
   group_var = NULL,
-  invariances = NULL,
-  partial_noninvariances = NULL,
+  group.equal = NULL,
+  group.partial = NULL,
   ...
 ) {
   #### Errors and Warnings ####
-  # ensure that both partial_noninvariances and measurementmodel are a list:
+  # ensure that both group.partial and measurementmodel are a list:
   if (
-    !is.null(partial_noninvariances) &&
+    !is.null(group.partial) &&
       is.list(measurementmodel) &&
-      !is.list(partial_noninvariances)
+      !is.list(group.partial)
   ) {
     stop(
       "If the measurement model uses blocks, then non-invariances also need to be defined in a list."
     )
   }
 
-  # ensure that both partial_noninvariances and measurementmodel are of the same
+  # ensure that both group.partial and measurementmodel are of the same
   # length
   if (
     is.list(measurementmodel) &&
-      is.list(partial_noninvariances) &&
-      length(measurementmodel) != length(partial_noninvariances)
+      is.list(group.partial) &&
+      length(measurementmodel) != length(group.partial)
   ) {
     stop(
-      "The number of elements in the lists for measurement model and partial_noninvariances must be equal."
+      "The number of elements in the lists for measurement model and group.partial must be equal."
     )
   }
 
@@ -71,7 +72,7 @@ step1 <- function(
   # block (to facilitate coding)
   if (!is.list(measurementmodel)) {
     measurementmodel <- list(measurementmodel)
-    partial_noninvariances <- list(partial_noninvariances)
+    group.partial <- list(group.partial)
   }
 
   # how many blocks?
@@ -85,8 +86,8 @@ step1 <- function(
       data = data,
       group = group_var,
       meanstructure = TRUE,
-      group.equal = invariances,
-      group.partial = partial_noninvariances[[m]],
+      group.equal = group.equal[[m]],
+      group.partial = group.partial[[m]],
       orthogonal = TRUE,
       ...
     )
@@ -126,13 +127,13 @@ summary.3slvar_step1 <- function(step1output, print_MM_summary = TRUE, ...) {
 
   cat("Number of measurement blocks: ", n_blocks, "\n")
   if (!rlang::is_empty(group_var)) {
-    cat(
+    cat(paste0(
       "Grouping variable (number of groups): ",
       group_var,
-      "(",
+      " (",
       n_groups,
       ")\n"
-    )
+    ))
   }
 
   if (print_MM_summary) {

@@ -10,8 +10,8 @@ step1(
   measurementmodel,
   id_var,
   group_var = NULL,
-  invariances = NULL,
-  partial_noninvariances = NULL,
+  group.equal = NULL,
+  group.partial = NULL,
   ...
 )
 
@@ -30,14 +30,15 @@ the MM of factor 2).}
 \item{group_var}{String containing the name of the grouping variable.
 Optional.}
 
-\item{invariances}{Character vector containing the parameters constrained to
+\item{group.equal}{Character vector containing the parameters constrained to
 equality across groups (cf. the \code{group.equal} argument in \code{lavaan}).
-Optional.}
+Optional. Must be a list of strings if \code{measurementmodel} is a list (e.g.,
+one string for block 1, and a second string for block 2).}
 
-\item{partial_noninvariances}{Character vector containing the non-invariances
-of the model (cf. the \code{group.partial} argument in \code{lavaan}). Optional. Must
-be a list of strings if \code{measurementmodel} is a list (e.g., one string for
-block 1, and a second string for block 2).}
+\item{group.partial}{Character vector containing the non-invariances of the
+model (cf. the \code{group.partial} argument in \code{lavaan}). Optional. Must be a
+list of strings if \code{measurementmodel} is a list (e.g., one string for block
+1, and a second string for block 2).}
 
 \item{...}{Arguments that are forwarded to \code{lavaan::summary()}.}
 

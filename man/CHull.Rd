@@ -13,7 +13,9 @@ CHull(model_list, criterion = "logLik")
 \method{plot}{CHull}(object)
 }
 \arguments{
-\item{model_list}{A list of objects obtained with the \link{step3} function.}
+\item{model_list}{A list of objects obtained with the \link{step3} function. The
+list can be in any order, but all models must have been fitted on the same
+data and with the same A and Q matrices.}
 
 \item{criterion}{Character string indicating which model fit index to use.
 Must be one of \code{"logLik"} (default), \code{"AIC"}, \code{"AIC3"}, \code{"BIC"}, or

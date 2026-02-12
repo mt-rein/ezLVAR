@@ -22,7 +22,9 @@
 #'   generic convex hull based model selection method. Behavior Research
 #'   Methods, 45, 1-15.
 #'
-#' @param model_list A list of objects obtained with the [step3] function.
+#' @param model_list A list of objects obtained with the [step3] function. The
+#'   list can be in any order, but all models must have been fitted on the same
+#'   data and with the same A and Q matrices.
 #' @param criterion Character string indicating which model fit index to use.
 #'   Must be one of `"logLik"` (default), `"AIC"`, `"AIC3"`, `"BIC"`, or
 #'   `"ICL"`.

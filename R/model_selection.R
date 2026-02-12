@@ -11,10 +11,9 @@
 #'   function visualizes the information criteria across models, allowing for a
 #'   visual comparison of model fit and complexity.
 #'
-#' @param model_list A list of objects obtained with the [step3] function. Each
-#'   object must include a mixture model (i.e., `mixture = TRUE`) with a
-#'   different number of clusters. The list can be in any order, but all models
-#'   must have been fitted on the same data and with the same A and Q matrices.
+#' @param model_list A list of objects obtained with the [step3] function. The
+#'   list can be in any order, but all models must have been fitted on the same
+#'   data and with the same A and Q matrices.
 #' @param use_CHull A logical value indicating whether to perform convex hull
 #'   model selection. Default is TRUE. If FALSE, only the information criteria
 #'   will be computed and compared.
