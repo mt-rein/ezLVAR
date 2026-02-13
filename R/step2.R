@@ -183,10 +183,11 @@ step2 <- function(step1output) {
     full_data[rows_i, factors] <- fs_i
 
     # compute lambda_star and theta_star and add to respective matrix
+    lambda_star[i, id_var] <- theta_star[i, id_var] <- id_i
     lambda_star_i <- (A_i %*% lambda_i) |> diag() |> as.numeric()
-    lambda_star[i, ] <- c(id_i, lambda_star_i)
+    lambda_star[i, factors] <- lambda_star_i
     theta_star_i <- (A_i %*% theta_i %*% t(A_i)) |> diag() |> as.numeric()
-    theta_star[i, ] <- c(id_i, theta_star_i)
+    theta_star[i, factors] <- theta_star_i
   }
 
   # assemble output
