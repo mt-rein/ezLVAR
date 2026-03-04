@@ -42,10 +42,10 @@ step2 <- function(step1output) {
   # elements, where each element is a list with n_groups elements)
   psi_block <-
     alpha_block <-
-      lambda_block <-
-        theta_block <-
-          tau_block <-
-            vector(mode = "list", length = n_blocks)
+    lambda_block <-
+    theta_block <-
+    tau_block <-
+    vector(mode = "list", length = n_blocks)
 
   for (m in 1:n_blocks) {
     # get the estimates of the current block
@@ -69,10 +69,10 @@ step2 <- function(step1output) {
   # each element is a list with n_blocks elements
   psi_group <-
     alpha_group <-
-      lambda_group <-
-        theta_group <-
-          tau_group <-
-            vector(mode = "list", length = n_groups)
+    lambda_group <-
+    theta_group <-
+    tau_group <-
+    vector(mode = "list", length = n_groups)
   for (g in 1:n_groups) {
     # put MM matrices of each group in the respective list
     for (m in 1:n_blocks) {
@@ -102,17 +102,17 @@ step2 <- function(step1output) {
   if (n_groups > 1) {
     names(psi_group) <-
       names(alpha_group) <-
-        names(lambda_group) <-
-          names(theta_group) <-
-            names(tau_group) <-
-              group_names
+      names(lambda_group) <-
+      names(theta_group) <-
+      names(tau_group) <-
+      group_names
   } else {
     names(psi_group) <-
       names(alpha_group) <-
-        names(lambda_group) <-
-          names(theta_group) <-
-            names(tau_group) <-
-              "group1"
+      names(lambda_group) <-
+      names(theta_group) <-
+      names(tau_group) <-
+      "group1"
   }
 
   #### compute factor scores, lambda_star, theta_star ####
@@ -125,8 +125,8 @@ step2 <- function(step1output) {
   # create empty matrices with n_persons rows and n_factors columns
   lambda_star <-
     theta_star <-
-      matrix(NA, nrow = n_persons, ncol = n_factors + 1) |>
-      as.data.frame()
+    matrix(NA, nrow = n_persons, ncol = n_factors + 1) |>
+    as.data.frame()
   colnames(lambda_star) <- colnames(theta_star) <- c(id_var, factors)
 
   for (i in 1:n_persons) {
@@ -167,22 +167,44 @@ step2 <- function(step1output) {
     theta_i <- theta_group[[group_i]]
     tau_i <- tau_group[[group_i]]
 
-    # compute sigma, A, and centered indicators
     sigma_i <- lambda_i %*% psi_i %*% t(lambda_i) + theta_i
-    A_i <- psi_i %*% t(lambda_i) %*% solve(sigma_i)
-    indicators_cent <- sweep(
-      as.matrix(data_i[, indicators]),
-      2,
-      (tau_i + lambda_i %*% alpha_i),
-      "-"
-    )
 
-    # compute factor scores and add to factor scores list
-    fs_i <- sweep(t(A_i %*% t(indicators_cent)), 2, alpha_i, "+")
+    # extract raw indicator data for this person
+    Y_i <- as.matrix(data_i[, indicators, drop = FALSE])
+
+    # center using model-implied means
+    mu_i <- as.numeric(tau_i + lambda_i %*% alpha_i)
+    Yc_i <- sweep(Y_i, 2, mu_i, "-")
+
+    # prepare output matrix
+    fs_i <- matrix(NA_real_, nrow = nrow(Y_i), ncol = n_factors)
+
+    # loop over rows (time points)
+    for (t in 1:nrow(Yc_i)) {
+
+      yc_it <- Yc_i[t, ]
+      observed <- which(!is.na(yc_it))
+
+      # if no observed indicators → skip
+      if (length(observed) == 0) next
+
+      # pattern-specific matrices
+      lambda_observed <- lambda_i[observed, , drop = FALSE]
+      sigma_observed  <- sigma_i[observed, observed, drop = FALSE]
+
+      # regression weight matrix for this pattern
+      A_observed <- psi_i %*% t(lambda_observed) %*% solve(sigma_observed)
+
+      # compute factor score
+      fs_i[t, ] <- as.numeric(A_observed %*% yc_it[observed] + alpha_i)
+    }
+
+    # write into full_data
     rows_i <- which(data[[id_var]] == id_i)
     full_data[rows_i, factors] <- fs_i
 
     # compute lambda_star and theta_star and add to respective matrix
+    A_i <- psi_i %*% t(lambda_i) %*% solve(sigma_i)
     lambda_star[i, id_var] <- theta_star[i, id_var] <- id_i
     lambda_star_i <- (A_i %*% lambda_i) |> diag() |> as.numeric()
     lambda_star[i, factors] <- lambda_star_i
