@@ -423,7 +423,7 @@ step3 <- function(
 
   #### 4) single- and multi-group modeling ####
   # combine person-models in a multi-group (i.e., multi-subject) model
-  if (!mixture | (mixture & n_clusters == 1)) {
+  if (!mixture || n_clusters == 1) {
     starttime <- Sys.time()
     fullmodel <- OpenMx::mxModel(
       "fullmodel",
@@ -490,7 +490,7 @@ step3 <- function(
   # clustering with an imprecise M-Step after a stable clustering is achieved, a
   # final precise M-Step is performed Then, the n_best_starts best starts are
   # completed
-  if (mixture & n_clusters > 1) {
+  if (mixture && n_clusters > 1) {
     starttime <- Sys.time()
     # provide seeds for the multiple starts (for replicability)
     if (is.null(seeds)) {
