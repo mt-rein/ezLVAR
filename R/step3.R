@@ -110,31 +110,31 @@
 #'
 #' @export
 step3 <- function(
-    step2output,
-    A,
-    Q,
-    B = NULL,
-    D = NULL,
-    x0 = NULL,
-    P0 = NULL,
-    u = NULL,
-    group_var = NULL,
-    group_constraints = NULL,
-    mixture = FALSE,
-    n_clusters = NULL,
-    n_starts = 25,
-    n_best_starts = 5,
-    maxit_phase1 = 100,
-    maxit_phase2 = 100,
-    stablecluster_criterion = .1,
-    convergence_criterion = 1e-6,
-    GEM_iterations = 3,
-    parallel = FALSE,
-    n_cores = NULL,
-    seeds = NULL,
-    newdata = NULL,
-    tryhard = FALSE,
-    verbose = TRUE
+  step2output,
+  A,
+  Q,
+  B = NULL,
+  D = NULL,
+  x0 = NULL,
+  P0 = NULL,
+  u = NULL,
+  group_var = NULL,
+  group_constraints = NULL,
+  mixture = FALSE,
+  n_clusters = NULL,
+  n_starts = 25,
+  n_best_starts = 5,
+  maxit_phase1 = 100,
+  maxit_phase2 = 100,
+  stablecluster_criterion = .1,
+  convergence_criterion = 1e-6,
+  GEM_iterations = 3,
+  parallel = FALSE,
+  n_cores = NULL,
+  seeds = NULL,
+  newdata = NULL,
+  tryhard = FALSE,
+  verbose = TRUE
 ) {
   #### Errors and Warnings ####
   if (mixture) {
@@ -404,7 +404,9 @@ step3 <- function(
       }
 
       all_parameters <- names(OpenMx::omxGetParameters(model_i))
-      free_parameters <- all_parameters[!(all_parameters %in% group_constraints)]
+      free_parameters <- all_parameters[
+        !(all_parameters %in% group_constraints)
+      ]
 
       model_i <- OpenMx::omxSetParameters(
         model_i,
@@ -742,8 +744,8 @@ step3 <- function(
     output[["n_groups"]] <- n_clusters |> as.integer()
     output[["n_persons"]] <- n_persons |> as.integer()
     output[["n_parameters"]] <- (n_clusters -
-                                   1 +
-                                   ncol(estimates) * n_clusters) |>
+      1 +
+      ncol(estimates) * n_clusters) |>
       as.integer()
     convergence_counter <- results_phase2 |>
       purrr::map_lgl(~ .x$converged)
@@ -770,9 +772,9 @@ step3 <- function(
 #'
 #' @export
 summary.3slvar_step3 <- function(
-    object,
-    round_digits = 3,
-    fit_indices = FALSE
+  object,
+  round_digits = 3,
+  fit_indices = FALSE
 ) {
   cat(paste("Type of model:", object$type, "\n"))
   cat(paste("Number of groups/clusters:", object$n_groups, "\n"))
@@ -811,9 +813,9 @@ summary.3slvar_step3 <- function(
         z.score = object$estimates[g, ] / object$standarderrors[g, ],
         p.value = 2 *
           (1 -
-             stats::pnorm(abs(
-               object$estimates[g, ] / object$standarderrors[g, ]
-             ))),
+            stats::pnorm(abs(
+              object$estimates[g, ] / object$standarderrors[g, ]
+            ))),
         ci.lower = object$estimates[g, ] - 1.96 * object$standarderrors[g, ],
         ci.upper = object$estimates[g, ] + 1.96 * object$standarderrors[g, ]
       )
@@ -917,60 +919,76 @@ summary.3slvar_step3 <- function(
 #'
 #' @export
 step3_multi <- function(
-    step2output,
-    A,
-    Q,
-    B = NULL,
-    D = NULL,
-    x0 = NULL,
-    P0 = NULL,
-    u = NULL,
-    n_clusters = NULL,
-    n_starts = 25,
-    n_best_starts = 5,
-    maxit_phase1 = 100,
-    maxit_phase2 = 100,
-    stablecluster_criterion = .1,
-    convergence_criterion = 1e-6,
-    GEM_iterations = 3,
-    parallel = FALSE,
-    n_cores = NULL,
-    seeds = NULL,
-    newdata = NULL,
-    verbose = TRUE) {
-  output <- vector(mode = "list", length = length(n_clusters))
-
+  step2output,
+  A,
+  Q,
+  B = NULL,
+  D = NULL,
+  x0 = NULL,
+  P0 = NULL,
+  u = NULL,
+  n_clusters = NULL,
+  n_starts = 25,
+  n_best_starts = 5,
+  maxit_phase1 = 100,
+  maxit_phase2 = 100,
+  stablecluster_criterion = .1,
+  convergence_criterion = 1e-6,
+  GEM_iterations = 3,
+  parallel = FALSE,
+  n_cores = NULL,
+  seeds = NULL,
+  newdata = NULL,
+  verbose = TRUE
+) {
   if (is.null(n_clusters)) {
-    stop("You need to specify the numbers of clusters to fit in the 'n_clusters' argument.")
+    stop(
+      "You need to specify the numbers of clusters to fit in the 'n_clusters' argument."
+    )
   }
 
-  for(i in n_clusters) {
+  output <- vector(mode = "list", length = 0)
+  for (i in 1:length(n_clusters)) {
+    k <- n_clusters[i]
     if (verbose) {
-      message(glue::glue("==== Starting estimation with {i} clusters. ===="))
+      message(glue::glue("==== Starting estimation with {k} clusters. ===="))
     }
-    output[[i]] <- step3(
-      step2output,
-      A = A,
-      Q = Q,
-      B = B,
-      D = D,
-      x0 = x0,
-      P0 = P0,
-      u = u,
-      mixture = TRUE,
-      n_clusters = i,
-      n_starts = n_starts,
-      n_best_starts = n_best_starts,
-      maxit_phase1 = maxit_phase1,
-      maxit_phase2 = maxit_phase2,
-      stablecluster_criterion = stablecluster_criterion,
-      convergence_criterion = convergence_criterion,
-      GEM_iterations = GEM_iterations,
-      parallel = parallel,
-      n_cores = n_cores,
-      seeds = seeds,
-      newdata = newdata,
-      verbose = verbose)
+    result <- tryCatch(
+      {
+        step3(
+          step2output,
+          A = A,
+          Q = Q,
+          B = B,
+          D = D,
+          x0 = x0,
+          P0 = P0,
+          u = u,
+          mixture = TRUE,
+          n_clusters = k,
+          n_starts = n_starts,
+          n_best_starts = n_best_starts,
+          maxit_phase1 = maxit_phase1,
+          maxit_phase2 = maxit_phase2,
+          stablecluster_criterion = stablecluster_criterion,
+          convergence_criterion = convergence_criterion,
+          GEM_iterations = GEM_iterations,
+          parallel = parallel,
+          n_cores = n_cores,
+          seeds = seeds,
+          newdata = newdata,
+          verbose = verbose
+        )
+      },
+      error = function(e) {
+        message(glue::glue(
+          "An error occurred while fitting the model with {k} clusters: {e$message}"
+        ))
+        return(NULL)
+      }
+    )
+
+    output[[paste0("k_", k)]] <- result
   }
 
   return(output)
