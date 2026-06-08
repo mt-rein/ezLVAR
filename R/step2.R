@@ -42,10 +42,10 @@ step2 <- function(step1output) {
   # elements, where each element is a list with n_groups elements)
   psi_block <-
     alpha_block <-
-    lambda_block <-
-    theta_block <-
-    tau_block <-
-    vector(mode = "list", length = n_blocks)
+      lambda_block <-
+        theta_block <-
+          tau_block <-
+            vector(mode = "list", length = n_blocks)
 
   for (m in 1:n_blocks) {
     # get the estimates of the current block
@@ -69,10 +69,10 @@ step2 <- function(step1output) {
   # each element is a list with n_blocks elements
   psi_group <-
     alpha_group <-
-    lambda_group <-
-    theta_group <-
-    tau_group <-
-    vector(mode = "list", length = n_groups)
+      lambda_group <-
+        theta_group <-
+          tau_group <-
+            vector(mode = "list", length = n_groups)
   for (g in 1:n_groups) {
     # put MM matrices of each group in the respective list
     for (m in 1:n_blocks) {
@@ -102,17 +102,17 @@ step2 <- function(step1output) {
   if (n_groups > 1) {
     names(psi_group) <-
       names(alpha_group) <-
-      names(lambda_group) <-
-      names(theta_group) <-
-      names(tau_group) <-
-      group_names
+        names(lambda_group) <-
+          names(theta_group) <-
+            names(tau_group) <-
+              group_names
   } else {
     names(psi_group) <-
       names(alpha_group) <-
-      names(lambda_group) <-
-      names(theta_group) <-
-      names(tau_group) <-
-      "group1"
+        names(lambda_group) <-
+          names(theta_group) <-
+            names(tau_group) <-
+              "group1"
   }
 
   #### compute factor scores, lambda_star, theta_star ####
@@ -125,8 +125,8 @@ step2 <- function(step1output) {
   # create empty matrices with n_persons rows and n_factors columns
   lambda_star <-
     theta_star <-
-    matrix(NA, nrow = n_persons, ncol = n_factors + 1) |>
-    as.data.frame()
+      matrix(NA, nrow = n_persons, ncol = n_factors + 1) |>
+      as.data.frame()
   colnames(lambda_star) <- colnames(theta_star) <- c(id_var, factors)
 
   for (i in 1:n_persons) {
@@ -179,24 +179,53 @@ step2 <- function(step1output) {
     # prepare output matrix
     fs_i <- matrix(NA_real_, nrow = nrow(Y_i), ncol = n_factors)
 
-    # loop over rows (time points)
-    for (t in 1:nrow(Yc_i)) {
+    observed_matrix <- !is.na(Yc_i)
 
-      yc_it <- Yc_i[t, ]
-      observed <- which(!is.na(yc_it))
+    # for each row, create a string of 0s and 1s indicating which indicators are
+    # observed (1) and which are missing (0)
+    rowwise_pattern <- apply(
+      observed_matrix,
+      1,
+      function(x) paste0(as.integer(x), collapse = "")
+    )
 
-      # if no observed indicators → skip
-      if (length(observed) == 0) next
+    # group rows with the same pattern of missingness together
+    patterns <- split(seq_len(nrow(Yc_i)), rowwise_pattern)
 
-      # pattern-specific matrices
+    # for each pattern, compute the factor scores and add them to fs_i
+    for (rows_pat in patterns) {
+      observed <- which(observed_matrix[rows_pat[1], ])
+
+      # all indicators missing -> keep NA
+      if (length(observed) == 0) {
+        next
+      }
+
       lambda_observed <- lambda_i[observed, , drop = FALSE]
-      sigma_observed  <- sigma_i[observed, observed, drop = FALSE]
+      sigma_observed <- sigma_i[observed, observed, drop = FALSE]
 
-      # regression weight matrix for this pattern
       A_observed <- psi_i %*% t(lambda_observed) %*% solve(sigma_observed)
 
-      # compute factor score
-      fs_i[t, ] <- as.numeric(A_observed %*% yc_it[observed] + alpha_i)
+      Yc_pat <- Yc_i[rows_pat, observed, drop = FALSE]
+
+      fs_pat <-
+        Yc_pat %*%
+        t(A_observed) +
+        matrix(
+          as.numeric(alpha_i),
+          nrow = length(rows_pat),
+          ncol = n_factors,
+          byrow = TRUE
+        )
+
+      # identify factors for which all indicators are missing in this pattern
+      # (i.e., no observed item has a nonzero loading on that factor)
+      factor_observed <- colSums(lambda_observed != 0) > 0
+
+      # if a factor has no observed indicators, set its score to NA
+      fs_pat[, !factor_observed] <- NA_real_
+
+      fs_i[rows_pat, ] <- fs_pat
     }
 
     # write into full_data
