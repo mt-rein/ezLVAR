@@ -370,15 +370,15 @@ step3 <- function(
       P0,
       u,
       OpenMx::mxExpectationStateSpace(
-        'A',
-        'B',
-        'C',
-        'D',
-        'Q',
-        'R',
-        'x0',
-        'P0',
-        'u'
+        A = A@name,
+        B = B@name,
+        C = C@name,
+        D = D@name,
+        Q = Q@name,
+        R = R@name,
+        x0 = x0@name,
+        P0 = P0@name,
+        u = u@name
       ),
       OpenMx::mxFitFunctionML(),
       OpenMx::mxData(data_i[, factors_ind, drop = FALSE], 'raw')
