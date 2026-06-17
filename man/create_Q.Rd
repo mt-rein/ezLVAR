@@ -6,8 +6,8 @@
 \usage{
 create_Q(
   step2output,
-  startvalues,
   random_intercept = FALSE,
+  startvalues = NULL,
   free = NULL,
   labels = NULL,
   lbound = NULL,
@@ -17,32 +17,36 @@ create_Q(
 \arguments{
 \item{step2output}{An object obtained with the \link{step2} function.}
 
-\item{startvalues}{A square matrix that represents the starting values for
-each parameter. The number of rows/columns must be equal to the number of
-latent factors in the model.}
-
 \item{random_intercept}{Logical. If TRUE, the matrices \code{startvalues}, \code{free},
-\code{labels}, \code{lbound}, and \code{ubound} are automatically expanded to accommodate
-the specification a random intercept.}
+\code{labels}, \code{lbound}, and \code{ubound} are expanded to accommodate the
+specification of a random intercept.}
 
-\item{free}{A matrix of TRUE and FALSE values that indicates which parameters
-are freely estimated. Optional. If \code{NULL}, all variances and covariances
-are freely estimated. If not \code{NULL}, the matrix must have the same
-dimensions as \code{startvalues}.}
+\item{startvalues}{A square matrix of numeric values that represents the
+starting values for each parameter. The number of rows/columns must be
+equal to the number of latent factors in the model. Optional. If \code{NULL},
+the starting values for all innovation variances (on the diagonal) are set
+to the variances of the respective factor score variables, and the
+innovation covariances (on the off-diagonal) are set to 0.}
 
-\item{labels}{A matrix of strings that indicates the labels for each
-parameter. Optional. If \code{NULL}, labels will be automatically generated. If
-not \code{NULL}, the matrix must have the same dimensions as \code{startvalues}.}
+\item{free}{A square matrix of TRUE and FALSE values that indicates which
+parameters are freely estimated. The number of rows/columns must be equal
+to the number of latent factors in the model. Optional. If \code{NULL}, all
+elements of the innovation covariance matrix are freely estimated.}
 
-\item{lbound}{A matrix of numeric values that indicates the lower bounds for
-each parameter (if a value is NA, no bounds are imposed on that parameter).
-Optional. If not \code{NULL}, the matrix must have the same dimensions as
-\code{startvalues}.}
+\item{labels}{A square matrix of strings that indicates the labels for each
+parameter. The number of rows/columns must be equal to the number of latent
+factors in the model. Optional. If \code{NULL}, labels will be automatically
+generated.}
 
-\item{ubound}{A matrix of numeric values that indicates the upper bounds for
-each parameter (if a value is NA, no bounds are imposed on that parameter).
-Optional. If not \code{NULL}, the matrix must have the same dimensions as
-\code{startvalues}.}
+\item{lbound}{A square matrix of numeric values that indicates the lower
+bounds for each parameter (if a value is NA, no bounds are imposed on that
+parameter). The number of rows/columns must be equal to the number of
+latent factors in the model. Optional. If \code{NULL}, no bounds are imposed.}
+
+\item{ubound}{A square matrix of numeric values that indicates the upper
+bounds for each parameter (if a value is NA, no bounds are imposed on that
+parameter). The number of rows/columns must be equal to the number of
+latent factors in the model. Optional. If \code{NULL}, no bounds are imposed.}
 }
 \value{
 Q An \code{OpenMx} matrix object that is entered into \code{\link[=step3]{step3()}}.

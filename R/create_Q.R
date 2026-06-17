@@ -6,79 +6,86 @@
 #'   variables).
 #'
 #' @param step2output An object obtained with the [step2] function.
-#' @param startvalues A square matrix that represents the starting values for
-#'   each parameter. The number of rows/columns must be equal to the number of
-#'   latent factors in the model.
 #' @param random_intercept Logical. If TRUE, the matrices `startvalues`, `free`,
-#'   `labels`, `lbound`, and `ubound` are automatically expanded to accommodate
-#'   the specification a random intercept.
-#' @param free A matrix of TRUE and FALSE values that indicates which parameters
-#'   are freely estimated. Optional. If `NULL`, all variances and covariances
-#'   are freely estimated. If not `NULL`, the matrix must have the same
-#'   dimensions as `startvalues`.
-#' @param labels A matrix of strings that indicates the labels for each
-#'   parameter. Optional. If `NULL`, labels will be automatically generated. If
-#'   not `NULL`, the matrix must have the same dimensions as `startvalues`.
-#' @param lbound A matrix of numeric values that indicates the lower bounds for
-#'   each parameter (if a value is NA, no bounds are imposed on that parameter).
-#'   Optional. If not `NULL`, the matrix must have the same dimensions as
-#'   `startvalues`.
-#' @param ubound A matrix of numeric values that indicates the upper bounds for
-#'   each parameter (if a value is NA, no bounds are imposed on that parameter).
-#'   Optional. If not `NULL`, the matrix must have the same dimensions as
-#'   `startvalues`.
+#'   `labels`, `lbound`, and `ubound` are expanded to accommodate the
+#'   specification of a random intercept.
+#' @param startvalues A square matrix of numeric values that represents the
+#'   starting values for each parameter. The number of rows/columns must be
+#'   equal to the number of latent factors in the model. Optional. If `NULL`,
+#'   the starting values for all innovation variances (on the diagonal) are set
+#'   to the variances of the respective factor score variables, and the
+#'   innovation covariances (on the off-diagonal) are set to 0.
+#' @param free A square matrix of TRUE and FALSE values that indicates which
+#'   parameters are freely estimated. The number of rows/columns must be equal
+#'   to the number of latent factors in the model. Optional. If `NULL`, all
+#'   elements of the innovation covariance matrix are freely estimated.
+#' @param labels A square matrix of strings that indicates the labels for each
+#'   parameter. The number of rows/columns must be equal to the number of latent
+#'   factors in the model. Optional. If `NULL`, labels will be automatically
+#'   generated.
+#' @param lbound A square matrix of numeric values that indicates the lower
+#'   bounds for each parameter (if a value is NA, no bounds are imposed on that
+#'   parameter). The number of rows/columns must be equal to the number of
+#'   latent factors in the model. Optional. If `NULL`, no bounds are imposed.
+#' @param ubound A square matrix of numeric values that indicates the upper
+#'   bounds for each parameter (if a value is NA, no bounds are imposed on that
+#'   parameter). The number of rows/columns must be equal to the number of
+#'   latent factors in the model. Optional. If `NULL`, no bounds are imposed.
 #'
 #' @returns Q An `OpenMx` matrix object that is entered into [step3()].
 #'
 #' @export
 create_Q <- function(
   step2output,
-  startvalues,
   random_intercept = FALSE,
+  startvalues = NULL,
   free = NULL,
   labels = NULL,
   lbound = NULL,
   ubound = NULL
 ) {
-  # checks:
+  factors <- step2output$other$factors
+  n_factors <- length(factors)
+
+  #### Errors ####
   matrices <- list(
-    free = free,
-    labels = labels,
-    lbound = lbound,
-    ubound = ubound
+    "startvalues" = startvalues,
+    "free" = free,
+    "labels" = labels,
+    "lbound" = lbound,
+    "ubound" = ubound
   )
-
-  if (nrow(startvalues) != ncol(startvalues)) {
-    stop("The 'startvalues' matrix must be a square matrix.")
-  }
-
-  # Loop through each and check dimensions
-  for (name in names(matrices)) {
-    if (
-      !is.null(matrices[[name]]) &&
-        any(dim(startvalues) != dim(matrices[[name]]))
-    ) {
-      stop(glue::glue(
-        "The '{name}' matrix must have the same dimensions as the 'startvalues' matrix."
-      ))
-    }
-  }
 
   if (!is.logical(random_intercept)) {
     stop("The random_intercept argument must be TRUE or FALSE.")
   }
 
-  # extract information on factors:
-  factors <- step2output$other$factors
-  n_factors <- length(factors)
-
-  if (nrow(startvalues) != n_factors) {
-    stop(
-      "The number of rows/columns of the startvalues matrix must be equal to the number of latent factors in the model."
-    )
+  # all matrices must have n_factors rows and columns
+  for (mat in names(matrices)) {
+    if (
+      !is.null(matrices[[mat]]) &&
+        (nrow(matrices[[mat]]) != n_factors ||
+          ncol(matrices[[mat]]) != n_factors)
+    ) {
+      stop(glue::glue(
+        "The '{mat}' element must have the same number of rows and columns as the number of latent factors in the model."
+      ))
+    }
   }
 
+  #### If there is no random intercept ####
   if (!random_intercept) {
+    # create matrix with start values
+    if (is.null(startvalues)) {
+      startvalues <- matrix(0, nrow = n_factors, ncol = n_factors)
+      for (fac in 1:n_factors) {
+        startvalues[fac, fac] <- var(
+          step2output$data[, factors[fac]],
+          na.rm = TRUE
+        )
+      }
+    }
+
     # create matrix that indicates free parameters
     if (is.null(free)) {
       free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
@@ -110,7 +117,25 @@ create_Q <- function(
     }
   }
 
+  #### If there is a random intercept ####
   if (random_intercept) {
+    # create matrix with start values
+    if (is.null(startvalues)) {
+      startvalues <- matrix(0, nrow = n_factors, ncol = n_factors)
+      for (fac in 1:n_factors) {
+        startvalues[fac, fac] <- var(
+          step2output$data[, factors[fac]],
+          na.rm = TRUE
+        )
+      }
+    }
+    # expand startvalue matrix with random intercept specification
+    zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
+    startvalues <- rbind(
+      cbind(startvalues, zero_matrix),
+      cbind(zero_matrix, zero_matrix)
+    )
+
     # create matrix that indicates free parameters
     if (is.null(free)) {
       free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
@@ -150,13 +175,6 @@ create_Q <- function(
     } else {
       ubound <- rbind(cbind(ubound, na_matrix), cbind(na_matrix, na_matrix))
     }
-
-    # expand startvalue matrix with random intercept specification
-    zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
-    startvalues <- rbind(
-      cbind(startvalues, zero_matrix),
-      cbind(zero_matrix, zero_matrix)
-    )
   }
 
   # create OpenMx model object
