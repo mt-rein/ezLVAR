@@ -240,9 +240,12 @@ generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
 
   for (k in 1:n_clusters) {
     # generate a stationary matrix of regression coefficients
-    # create additive noise (-.5 to .5) for phi:
+    # create multiplicative noise (.5 to 1.5) for phi:
     noise_multi <- stats::runif(length(values_phi), 0.5, 1.5)
-    phistart <- matrix(values_phi * noise_multi, nrow = n_factors)
+    # create additive noise (-0.5 to 0.5) for phi:
+    noise_add <- stats::runif(length(values_phi), -0.5, 0.5)
+    # add noise to starting values of phi:
+    phistart <- matrix(values_phi * noise_multi + noise_add, nrow = n_factors)
     # check if the largest eigenvalue is greater than .9 in modulus:
     ev <- eigen(phistart)$values
     max_modulus <- max(Mod(ev))
@@ -254,8 +257,11 @@ generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
     }
 
     # generate a positive definitive matrix of innovation (co)variances
-    noise_multi <- stats::runif(length(values_phi), 0.5, 1.5)
-    zetastart <- matrix(values_zeta * noise_multi, nrow = n_factors)
+    # create multiplicative noise (.5 to 1.5) for zeta:
+    noise_multi <- stats::runif(length(values_zeta), 0.5, 1.5)
+    # create additive noise (0.5 to 1.5) for zeta:
+    noise_add <- stats::runif(length(values_zeta), 0.5, 1.5)
+    zetastart <- matrix(values_zeta * noise_multi + noise_add, nrow = n_factors)
     zetastartPD <- Matrix::nearPD(zetastart)$mat |> as.matrix()
 
     startvalues[[k]] <- c(
