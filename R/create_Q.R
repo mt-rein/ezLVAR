@@ -81,7 +81,7 @@ create_Q <- function(
   # create matrix with start values (the (co)variances of the factor scores
   # variables)
   if (is.null(startvalues)) {
-    startvalues <- var(step2output$data[, factors], na.rm = TRUE)
+    startvalues <- stats::var(step2output$data[, factors], na.rm = TRUE)
   }
 
   # create matrix that indicates free parameters
