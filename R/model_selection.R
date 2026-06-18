@@ -174,7 +174,7 @@ plot.model_selection <- function(
 
   # reshape to long format
   to_keep <- c("n_clusters", criterion)
-  long <- reshape(
+  long <- stats::reshape(
     df[, to_keep, drop = FALSE],
     varying = criterion,
     v.names = "value",
@@ -197,18 +197,18 @@ plot.model_selection <- function(
     ylab = "Information criterion",
     xaxt = "n"
   )
-  axis(1, at = df$n_clusters, labels = df$n_clusters)
+  graphics::axis(1, at = df$n_clusters, labels = df$n_clusters)
 
   # draw lines and points for each criterion
   for (i in seq_along(criterion)) {
     crit <- criterion[i]
     sub <- long[long$criterion == crit, ]
 
-    lines(sub$n_clusters, sub$value, col = cols[i], lwd = 2)
-    points(sub$n_clusters, sub$value, col = cols[i], pch = 16)
+    graphics::lines(sub$n_clusters, sub$value, col = cols[i], lwd = 2)
+    graphics::points(sub$n_clusters, sub$value, col = cols[i], pch = 16)
   }
 
-  legend(
+  graphics::legend(
     "topright",
     legend = criterion,
     col = cols,

@@ -253,23 +253,27 @@ plot.CHull <- function(object) {
     ylab = object$criterion,
     xaxt = "n"
   )
-  axis(1, at = object$df_all$n_clusters, labels = object$df_all$n_clusters)
+  graphics::axis(
+    1,
+    at = object$df_all$n_clusters,
+    labels = object$df_all$n_clusters
+  )
   # color points on the hull green:
-  points(
+  graphics::points(
     object$df_hull$n_clusters,
     object$df_hull[[object$criterion]],
     col = "green",
     pch = 16
   )
   # add green line connecting the points on the hull:
-  lines(
+  graphics::lines(
     object$df_hull$n_clusters,
     object$df_hull[[object$criterion]],
     col = "green"
   )
   # mark the solution with a blue point:
   if (nrow(object$solution) > 0) {
-    points(
+    graphics::points(
       object$solution$n_clusters,
       object$solution[[object$criterion]],
       col = "blue",
