@@ -72,93 +72,56 @@ create_A <- function(
     }
   }
 
-  #### If there is no random intercept ####
-  if (!random_intercept) {
-    # create matrix with start values (all values equal to 0)
-    if (is.null(startvalues)) {
-      startvalues <- matrix(0, nrow = n_factors, ncol = n_factors)
-    }
-
-    # create matrix that indicates free parameters
-    if (is.null(free)) {
-      free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
-    }
-
-    # create label matrix
-    if (is.null(labels)) {
-      labels <- outer(factors, factors, FUN = function(i, j) {
-        paste0("phi_", i, "_", j)
-      })
-    }
-
-    # create lbound and ubound objects if not specified by user
-    if (is.null(lbound)) {
-      lbound <- NA
-    }
-    if (is.null(ubound)) {
-      ubound <- NA
-    }
+  #### create elements that have not been provided by the user ####
+  # create matrix with start values (all values equal to 0)
+  if (is.null(startvalues)) {
+    startvalues <- matrix(0, nrow = n_factors, ncol = n_factors)
   }
 
-  #### If there is a random intercept ####
-  if (random_intercept) {
-    # create matrix with start values (all values equal to 0)
-    if (is.null(startvalues)) {
-      startvalues <- matrix(0, nrow = n_factors, ncol = n_factors)
-    }
+  # create matrix that indicates free parameters
+  if (is.null(free)) {
+    free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
+  }
 
-    # expand startvalue matrix with random intercept specification
+  # create label matrix
+  if (is.null(labels)) {
+    labels <- outer(factors, factors, FUN = function(i, j) {
+      paste0("phi_", i, "_", j)
+    })
+  }
+
+  # create lbound and ubound objects if not specified by user
+  if (is.null(lbound)) {
+    lbound <- matrix(NA, n_factors, n_factors)
+  }
+  if (is.null(ubound)) {
+    ubound <- matrix(NA, n_factors, n_factors)
+  }
+
+  #### if random intercept has been requested, expand the matrices ####
+  if (random_intercept) {
     zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
+    false_matrix <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
+    na_matrix <- matrix(NA, nrow = n_factors, ncol = n_factors)
+
+    # expand startvalue matrix
     startvalues <- rbind(
       cbind(startvalues, zero_matrix),
       cbind(zero_matrix, diag(n_factors))
     )
 
-    # create matrix that indicates free parameters
-    if (is.null(free)) {
-      free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
-    }
-    # expand free matrix with random intercept specification
-    fixed <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
-    free <- rbind(cbind(free, fixed), cbind(fixed, fixed))
+    # expand free matrix
+    free <- rbind(cbind(free, false_matrix), cbind(false_matrix, false_matrix))
 
-    # create label matrix
-    if (is.null(labels)) {
-      labels <- outer(factors, factors, FUN = function(i, j) {
-        paste0("phi_", i, "_", j)
-      })
-    }
-    # expand label matrix with random intercept specification
-    na_matrix <- matrix(NA, nrow = n_factors, ncol = n_factors)
+    # expand label matrix
     labels <- rbind(cbind(labels, na_matrix), cbind(na_matrix, na_matrix))
 
-    # expand lbound and ubound matrices with random intercept specification
-    if (is.null(lbound)) {
-      lbound <- NA
-    } else {
-      lbound <- rbind(cbind(lbound, na_matrix), cbind(na_matrix, na_matrix))
-    }
-    if (is.null(ubound)) {
-      ubound <- NA
-    } else {
-      ubound <- rbind(cbind(ubound, na_matrix), cbind(na_matrix, na_matrix))
-    }
-
-    # create OpenMx model object
-    A <- OpenMx::mxMatrix(
-      type = "Full",
-      name = "A",
-      nrow = 2 * n_factors,
-      ncol = 2 * n_factors,
-      free = free,
-      values = startvalues,
-      labels = labels,
-      lbound = lbound,
-      ubound = ubound,
-      byrow = TRUE
-    )
+    # expand lbound and ubound
+    lbound <- rbind(cbind(lbound, na_matrix), cbind(na_matrix, na_matrix))
+    ubound <- rbind(cbind(ubound, na_matrix), cbind(na_matrix, na_matrix))
   }
 
+  #### If there is a random intercept ####
   # create OpenMx model object
   A <- OpenMx::mxMatrix(
     type = "Full",

@@ -73,111 +73,67 @@ create_Q <- function(
     }
   }
 
-  #### If there is no random intercept ####
-  if (!random_intercept) {
-    # create matrix with start values
-    if (is.null(startvalues)) {
-      startvalues <- matrix(0, nrow = n_factors, ncol = n_factors)
-      for (fac in 1:n_factors) {
-        startvalues[fac, fac] <- var(
-          step2output$data[, factors[fac]],
-          na.rm = TRUE
+  #### create elements that have not been provided by the user ####
+  # create matrix with start values (the (co)variances of the factor scores
+  # variables)
+  if (is.null(startvalues)) {
+    startvalues <- var(step2output$data[, factors], na.rm = TRUE)
+  }
+
+  # create matrix that indicates free parameters
+  if (is.null(free)) {
+    free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
+  }
+
+  # create label matrix
+  if (is.null(labels)) {
+    labels <- matrix(NA, n_factors, n_factors)
+
+    # Fill the matrix with symmetric labels
+    for (i in 1:n_factors) {
+      for (j in 1:n_factors) {
+        labels[i, j] <- paste0(
+          "zeta_",
+          factors[min(i, j)],
+          "_",
+          factors[max(i, j)]
         )
       }
-    }
-
-    # create matrix that indicates free parameters
-    if (is.null(free)) {
-      free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
-    }
-
-    # create label matrix
-    if (is.null(labels)) {
-      labels <- matrix(NA, n_factors, n_factors)
-
-      # Fill the matrix with symmetric labels
-      for (i in 1:n_factors) {
-        for (j in 1:n_factors) {
-          labels[i, j] <- paste0(
-            "zeta_",
-            factors[min(i, j)],
-            "_",
-            factors[max(i, j)]
-          )
-        }
-      }
-    }
-
-    # create lbound and ubound objects if not specified by user
-    if (is.null(lbound)) {
-      lbound <- NA
-    }
-    if (is.null(ubound)) {
-      ubound <- NA
     }
   }
 
-  #### If there is a random intercept ####
+  # create lbound and ubound objects if not specified by user
+  if (is.null(lbound)) {
+    lbound <- matrix(NA, n_factors, n_factors)
+  }
+  if (is.null(ubound)) {
+    ubound <- matrix(NA, n_factors, n_factors)
+  }
+
+  #### if random intercept has been requested, expand the matrices ####
   if (random_intercept) {
-    # create matrix with start values
-    if (is.null(startvalues)) {
-      startvalues <- matrix(0, nrow = n_factors, ncol = n_factors)
-      for (fac in 1:n_factors) {
-        startvalues[fac, fac] <- var(
-          step2output$data[, factors[fac]],
-          na.rm = TRUE
-        )
-      }
-    }
-    # expand startvalue matrix with random intercept specification
     zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
+    false_matrix <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
+    na_matrix <- matrix(NA, nrow = n_factors, ncol = n_factors)
+
+    # expand startvalue matrix
     startvalues <- rbind(
       cbind(startvalues, zero_matrix),
       cbind(zero_matrix, zero_matrix)
     )
 
-    # create matrix that indicates free parameters
-    if (is.null(free)) {
-      free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
-    }
-    # expand free matrix with random intercept specification
-    fixed <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
-    free <- rbind(cbind(free, fixed), cbind(fixed, fixed))
+    # expand free matrix
+    free <- rbind(cbind(free, false_matrix), cbind(false_matrix, false_matrix))
 
-    # create label matrix
-    if (is.null(labels)) {
-      labels <- matrix(NA, n_factors, n_factors)
-
-      # fill the matrix with symmetric labels
-      for (i in 1:n_factors) {
-        for (j in 1:n_factors) {
-          labels[i, j] <- paste0(
-            "zeta_",
-            factors[min(i, j)],
-            "_",
-            factors[max(i, j)]
-          )
-        }
-      }
-    }
-    # expand label matrix with random intercept specification
-    na_matrix <- matrix(NA, nrow = n_factors, ncol = n_factors)
+    # expand label matrix
     labels <- rbind(cbind(labels, na_matrix), cbind(na_matrix, na_matrix))
 
-    # expand lbound and ubound matrices with random intercept specification:
-    if (is.null(lbound)) {
-      lbound <- NA
-    } else {
-      lbound <- rbind(cbind(lbound, na_matrix), cbind(na_matrix, na_matrix))
-    }
-    if (is.null(ubound)) {
-      ubound <- NA
-    } else {
-      ubound <- rbind(cbind(ubound, na_matrix), cbind(na_matrix, na_matrix))
-    }
+    # expand lbound and ubound
+    lbound <- rbind(cbind(lbound, na_matrix), cbind(na_matrix, na_matrix))
+    ubound <- rbind(cbind(ubound, na_matrix), cbind(na_matrix, na_matrix))
   }
 
-  # create OpenMx model object
+  #### create OpenMx model object ####
   Q <- OpenMx::mxMatrix(
     type = "Full",
     name = "Q",
