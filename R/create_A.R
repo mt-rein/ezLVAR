@@ -59,16 +59,20 @@ create_A <- function(
     stop("The random_intercept argument must be TRUE or FALSE.")
   }
 
-  # all matrices must have n_factors rows and columns
+  # all elements must be matrices and have n_factors rows and columns
   for (mat in names(matrices)) {
-    if (
-      !is.null(matrices[[mat]]) &&
+    if (!is.null(matrices[[mat]])) {
+      if (!is.matrix(matrices[[mat]])) {
+        stop(glue::glue("The '{mat}' element must be a matrix."))
+      }
+      if (
         (nrow(matrices[[mat]]) != n_factors ||
           ncol(matrices[[mat]]) != n_factors)
-    ) {
-      stop(glue::glue(
-        "The '{mat}' element must have the same number of rows and columns as the number of latent factors in the model."
-      ))
+      ) {
+        stop(glue::glue(
+          "The '{mat}' element must have the same number of rows and columns as the number of latent factors in the model."
+        ))
+      }
     }
   }
 
