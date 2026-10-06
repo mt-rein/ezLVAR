@@ -149,7 +149,7 @@ run_start <- function(
 
     # run the models
     clustermodels_run <- clustermodels |>
-      purrr::map(OpenMx::mxRun, silent = TRUE, suppressWarnings = TRUE)
+      purrr::map(OpenMx::mxRun, silent = !verbose, suppressWarnings = TRUE)
 
     # obtain person-wise LL in a n_persons x n_clusters matrix:
     personLL <- clustermodels_run |>

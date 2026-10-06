@@ -579,8 +579,8 @@ step3 <- function(
 
     if (verbose) {
       message(glue::glue(
-        "==== Phase 1 finished.",
-        "Proceeding to Phase 2 with {n_best_starts} starts. ===="
+        "==== Phase 1 finished. ",
+        "Proceed to Phase 2 with {n_best_starts} starts. ===="
       ))
     }
 
@@ -657,6 +657,12 @@ step3 <- function(
       )
     }
 
+    if (verbose) {
+      message(glue::glue(
+        "==== Phase 2 finished. Proceed to computing standard errors. ===="
+      ))
+    }
+
     # select best model:
     best_start <- results_phase2 |>
       purrr::map_dbl(~ .x$observed_data_LL) |>
@@ -679,7 +685,42 @@ step3 <- function(
       })
 
     final_model <- best_model |>
-      purrr::map(OpenMx::mxRun, silent = TRUE, suppressWarnings = TRUE)
+      purrr::map(OpenMx::mxRun, silent = !verbose)
+
+    # check if all models converged properly (status code = 0)
+    codes <- final_model |>
+      purrr::map_dbl(~ .x$output$status$code)
+
+    if (any(codes != 0)) {
+      if (verbose) {
+        message(glue::glue(
+          "Non-zero status code in the final model. ",
+          "Trying to run them again with mxTryHard() to obtain a solution."
+        ))
+      }
+
+      # if not, rerun with mxTryHard()
+      final_model <- best_model |>
+        purrr::map(OpenMx::mxTryHard, silent = !verbose)
+
+      # check codes again
+      codes <- final_model |>
+        purrr::map_dbl(~ .x$output$status$code)
+
+      if (any(codes != 0)) {
+        warning(glue::glue(
+          "At least one non-zero status code in the final model."
+        ))
+      }
+    }
+
+    # announce that the final model converged:
+    if (verbose && all(codes == 0)) {
+      message(glue::glue(
+        "The final model converged properly (all OpenMx status codes are 0)."
+      ))
+    }
+
     # obtain person-wise LL in a n_persons x n_clusters matrix:
     personLL <- final_model |>
       # loop over all clusters
@@ -702,7 +743,9 @@ step3 <- function(
     )
 
     if (verbose) {
-      message(glue::glue("==== Phase 2 finished. ===="))
+      message(glue::glue(
+        "==== Estimation finished. ===="
+      ))
     }
 
     duration <- difftime(Sys.time(), starttime, units = "secs") |> as.numeric()
