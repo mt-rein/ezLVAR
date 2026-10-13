@@ -32,11 +32,9 @@ create_P0 <- function(
   # create matrix that indicates free parameters
   free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
   # create label matrix
-  if (is.null(labels)) {
-    labels <- outer(factors, factors, FUN = function(i, j) {
-      paste0("phi_", i, "_", j)
-    })
-  }
+  labels <- outer(factors, factors, FUN = function(i, j) {
+    paste0("phi_", i, "_", j)
+  })
 
   # create label matrix
   labels <- matrix(NA, n_factors, n_factors)
@@ -85,18 +83,16 @@ create_P0 <- function(
   }
 
   #### create OpenMx model object ####
-  A <- OpenMx::mxMatrix(
+  P0 <- OpenMx::mxMatrix(
     type = "Full",
-    name = "A",
+    name = "P0",
     nrow = nrow(startvalues),
     ncol = nrow(startvalues),
     free = free,
     values = startvalues,
     labels = labels,
-    lbound = lbound,
-    ubound = ubound,
     byrow = TRUE
   )
 
-  return(A)
+  return(P0)
 }
