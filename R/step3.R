@@ -789,7 +789,7 @@ step3 <- function(
       ncol(estimates) * n_clusters) |>
       as.integer()
     output[["status_code"]] <- final_model |>
-      purr::map_dbl(~ .x$output$status$code)
+      purrr::map_dbl(~ .x$output$status$code)
     convergence_counter <- results_phase2 |>
       purrr::map_lgl(~ .x$converged)
     output[["n_starts"]] <- n_starts |> as.integer()
