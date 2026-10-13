@@ -125,8 +125,7 @@ create_A <- function(
     ubound <- rbind(cbind(ubound, na_matrix), cbind(na_matrix, na_matrix))
   }
 
-  #### If there is a random intercept ####
-  # create OpenMx model object
+  #### create OpenMx model object ####
   A <- OpenMx::mxMatrix(
     type = "Full",
     name = "A",
