@@ -77,9 +77,8 @@
 #' @param newdata A data frame. Note that the output of `step2` already contains
 #'   the data, so using this argument is only required if the data have been
 #'   manipulated after step 2 (e.g., removing outliers). Optional.
-#' @param tryhard Should the algorithm run multiple times to obtain a solution
-#'   (see [OpenMx::mxTryHard])? Does not work in conjunction with mixture
-#'   modeling.
+#' @param tryhard Should the optimizer run multiple times to obtain a solution
+#'   (see [OpenMx::mxTryHard])?
 #' @param verbose Logical (FALSE by default). If TRUE, print progress messages.
 #'
 #' @returns Returns an object of class `3slvar_step3mix`, which is a list
@@ -481,13 +480,14 @@ step3 <- function(
     output[["logLik"]] <- fullmodelr$output$Minus2LogLikelihood / (-2)
     output[["n_persons"]] <- n_persons |> as.integer()
     output[["n_parameters"]] <- length(OpenMx::omxGetParameters(fullmodelr))
+    output[["status_code"]] <- fullmodelr$output$status$code
   }
 
   #### 5) mixture modeling ####
 
   # The estimation happens in two parts: First, the algorithm aims for a stable
   # clustering with an imprecise M-Step after a stable clustering is achieved, a
-  # final precise M-Step is performed Then, the n_best_starts best starts are
+  # final precise M-Step is performed. Then, the n_best_starts best starts are
   # completed
   if (mixture && n_clusters > 1) {
     starttime <- Sys.time()
@@ -691,11 +691,11 @@ step3 <- function(
     codes <- final_model |>
       purrr::map_dbl(~ .x$output$status$code)
 
-    if (any(codes != 0)) {
+    if (any(codes != 0) && tryhard) {
       if (verbose) {
         message(glue::glue(
           "Non-zero status code in the final model. ",
-          "Trying to run them again with mxTryHard() to obtain a solution."
+          "Trying to run them again with mxTryHard() to obtain a proper solution."
         ))
       }
 
@@ -703,15 +703,16 @@ step3 <- function(
       final_model <- best_model |>
         purrr::map(OpenMx::mxTryHard, silent = !verbose)
 
-      # check codes again
+      # update codes
       codes <- final_model |>
         purrr::map_dbl(~ .x$output$status$code)
+    }
 
-      if (any(codes != 0)) {
-        warning(glue::glue(
-          "At least one non-zero status code in the final model."
-        ))
-      }
+    # warning if any code is non-zero
+    if (any(codes != 0)) {
+      warning(glue::glue(
+        "At least one non-zero status code in the final model."
+      ))
     }
 
     # announce that the final model converged:
@@ -787,6 +788,8 @@ step3 <- function(
       1 +
       ncol(estimates) * n_clusters) |>
       as.integer()
+    output[["status_code"]] <- final_model |>
+      purr::map_dbl(~ .x$output$status$code)
     convergence_counter <- results_phase2 |>
       purrr::map_lgl(~ .x$converged)
     output[["n_starts"]] <- n_starts |> as.integer()

@@ -120,9 +120,8 @@ used if \code{mixture = TRUE}.}
 the data, so using this argument is only required if the data have been
 manipulated after step 2 (e.g., removing outliers). Optional.}
 
-\item{tryhard}{Should the algorithm run multiple times to obtain a solution
-(see \link[OpenMx:mxTryHard]{OpenMx::mxTryHard})? Does not work in conjunction with mixture
-modeling.}
+\item{tryhard}{Should the optimizer run multiple times to obtain a solution
+(see \link[OpenMx:mxTryHard]{OpenMx::mxTryHard})?}
 
 \item{verbose}{Logical (FALSE by default). If TRUE, print progress messages.}
 
