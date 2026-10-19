@@ -24,9 +24,9 @@ specification of a random intercept.}
 \item{startvalues}{A square matrix of numeric values that represents the
 starting values for each parameter. The number of rows/columns must be
 equal to the number of latent factors in the model. Optional. If \code{NULL},
-the starting values for all innovation variances (on the diagonal) are set
-to the variances of the respective factor score variables, and the
-innovation covariances (on the off-diagonal) are set to 0.}
+the starting values are set to the (co)variances of the factor score
+variables. If \code{random_intercept = TRUE}, the starting values are set to the
+pooled within-person (co)variances of the factor score variables.}
 
 \item{free}{A square matrix of TRUE and FALSE values that indicates which
 parameters are freely estimated. The number of rows/columns must be equal

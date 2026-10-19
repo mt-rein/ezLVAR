@@ -15,8 +15,13 @@ specification of a random intercept.}
 
 \item{startvalues}{A square matrix of numeric values that represents the
 starting values for each parameter. The number of rows/columns must be
-equal to the number of latent factors in the model. Optional. If \code{NULL},
-the starting values are 1000 on the diagonal and 100 on the off-diagonal.}
+equal to the number of latent factors in the model. If \code{random_intercept = TRUE}, the start values must be a list of square matrices. The first
+element of the list corresponds to the upper left matrix of P0, the second
+element to the lower left matrix of P0. Optional. If \code{NULL}, start values
+will be computed as the (co)variances of the factor score variables. If
+\code{random_intercept = TRUE}, the starting values are set to the pooled
+within-person (co)variances and the between-person (co)variances of the
+factor score variables.}
 }
 \value{
 P0 An \code{OpenMx} matrix object that is entered into \code{\link[=step3]{step3()}}.
