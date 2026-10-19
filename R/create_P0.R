@@ -68,7 +68,7 @@ create_P0 <- function(
       X <- step2output$data[, factors, drop = FALSE]
 
       # Use only rows with complete factor scores and non-missing ID
-      keep <- complete.cases(X) & !is.na(id)
+      keep <- stats::complete.cases(X) & !is.na(id)
 
       id <- id[keep]
       X <- X[keep, , drop = FALSE]
@@ -93,7 +93,7 @@ create_P0 <- function(
       X_centered <- X_within
 
       for (v in factors) {
-        person_means <- ave(X_within[[v]], id_within, FUN = mean)
+        person_means <- stats::ave(X_within[[v]], id_within, FUN = mean)
         X_centered[[v]] <- X_within[[v]] - person_means
       }
 
@@ -114,7 +114,7 @@ create_P0 <- function(
       # ------------------------------------------------------------------
 
       # Compute person means for each factor
-      person_means <- aggregate(
+      person_means <- stats::aggregate(
         X,
         by = list(id = id),
         FUN = mean

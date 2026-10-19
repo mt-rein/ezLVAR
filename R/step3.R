@@ -934,7 +934,8 @@ summary.3slvar_step3 <- function(
 #' @param u An `OpenMx` matrix object that indicates the covariates. Required if
 #'   `B` or `D` are included. If `NULL`, an object with no covariates is
 #'   automatically created.
-#' @param n_clusters A numerical vector indicating the numbers of clusters to fit.
+#' @param n_clusters A numerical vector indicating the numbers of clusters to
+#'   fit.
 #' @param n_starts Numerical. The total number of random starts.
 #' @param n_best_starts Numerical. The number of starts that are completed until
 #'   convergence in Phase 2.
@@ -956,6 +957,8 @@ summary.3slvar_step3 <- function(
 #' @param newdata A data frame. Note that the output of `step2` already contains
 #'   the data, so using this argument is only required if the data have been
 #'   manipulated after step 2 (e.g., removing outliers). Optional.
+#' @param tryhard Should the optimizer run multiple times to obtain a solution
+#'   when computing the SEs of the final model (see [OpenMx::mxTryHard])?
 #' @param verbose Logical (FALSE by default). If TRUE, print progress messages.
 #'
 #' @returns A list containing the output of the [step3()] function for each
@@ -983,6 +986,7 @@ step3_multi <- function(
   n_cores = NULL,
   seeds = NULL,
   newdata = NULL,
+  tryhard = FALSE,
   verbose = TRUE
 ) {
   if (is.null(n_clusters)) {
@@ -1021,6 +1025,7 @@ step3_multi <- function(
           n_cores = n_cores,
           seeds = seeds,
           newdata = newdata,
+          tryhard = tryhard,
           verbose = verbose
         )
       },

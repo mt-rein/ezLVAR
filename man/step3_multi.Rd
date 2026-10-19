@@ -25,6 +25,7 @@ step3_multi(
   n_cores = NULL,
   seeds = NULL,
   newdata = NULL,
+  tryhard = FALSE,
   verbose = TRUE
 )
 }
@@ -63,7 +64,8 @@ off-diagonal).}
 \code{B} or \code{D} are included. If \code{NULL}, an object with no covariates is
 automatically created.}
 
-\item{n_clusters}{A numerical vector indicating the numbers of clusters to fit.}
+\item{n_clusters}{A numerical vector indicating the numbers of clusters to
+fit.}
 
 \item{n_starts}{Numerical. The total number of random starts.}
 
@@ -96,6 +98,9 @@ start. Optional. If \code{NULL}, random seeds are automatically generated.}
 \item{newdata}{A data frame. Note that the output of \code{step2} already contains
 the data, so using this argument is only required if the data have been
 manipulated after step 2 (e.g., removing outliers). Optional.}
+
+\item{tryhard}{Should the optimizer run multiple times to obtain a solution
+when computing the SEs of the final model (see \link[OpenMx:mxTryHard]{OpenMx::mxTryHard})?}
 
 \item{verbose}{Logical (FALSE by default). If TRUE, print progress messages.}
 }
