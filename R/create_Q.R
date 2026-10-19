@@ -12,9 +12,9 @@
 #' @param startvalues A square matrix of numeric values that represents the
 #'   starting values for each parameter. The number of rows/columns must be
 #'   equal to the number of latent factors in the model. Optional. If `NULL`,
-#'   the starting values for all innovation variances (on the diagonal) are set
-#'   to the variances of the respective factor score variables, and the
-#'   innovation covariances (on the off-diagonal) are set to 0.
+#'   the starting values are set to the (co)variances of the factor score
+#'   variables. If `random_intercept = TRUE`, the starting values are set to the
+#'   pooled within-person (co)variances of the factor score variables.
 #' @param free A square matrix of TRUE and FALSE values that indicates which
 #'   parameters are freely estimated. The number of rows/columns must be equal
 #'   to the number of latent factors in the model. Optional. If `NULL`, all
@@ -81,7 +81,55 @@ create_Q <- function(
   # create matrix with start values (the (co)variances of the factor scores
   # variables)
   if (is.null(startvalues)) {
-    startvalues <- stats::var(step2output$data[, factors], na.rm = TRUE)
+    # without a random intercept, the starting values are the (co)variances of
+    # the factor score variables
+    if (!random_intercept) {
+      startvalues <- stats::var(step2output$data[, factors], na.rm = TRUE)
+    } else {
+      # with a random intercept, use the pooled within-person (co)variances of
+      # the factor score variables as starting values
+      # Extract ID and factor scores
+      id_name <- step2output$other$id_var
+      id <- step2output$data[[id_name]]
+
+      X <- step2output$data[, factors, drop = FALSE]
+
+      #
+      # Use only rows with complete factor scores and non-missing ID
+      keep <- complete.cases(X) & !is.na(id)
+
+      id <- id[keep]
+      X <- X[keep, , drop = FALSE]
+
+      # Number of observations per person
+      n_per_person <- table(id)
+
+      # For within-person covariance, persons need at least 2 observations
+      valid_within_ids <- names(n_per_person)[n_per_person >= 2L]
+      keep_within <- id %in% valid_within_ids
+
+      id_within <- id[keep_within]
+      X_within <- X[keep_within, , drop = FALSE]
+
+      #
+      # Person-center the factor scores
+      X_centered <- X_within
+
+      for (v in factors) {
+        person_means <- ave(X_within[[v]], id_within, FUN = mean)
+        X_centered[[v]] <- X_within[[v]] - person_means
+      }
+
+      X_centered <- as.matrix(X_centered)
+
+      #
+      # Pooled within-person covariance matrix
+      n_obs_within <- nrow(X_centered)
+      n_persons_within <- length(unique(id_within))
+
+      within_cov <- crossprod(X_centered) / (n_obs_within - n_persons_within)
+      startvalues <- within_cov
+    }
   }
 
   # create matrix that indicates free parameters
