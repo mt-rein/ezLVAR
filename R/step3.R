@@ -190,6 +190,7 @@ step3 <- function(
   ## create output object:
   output <- list(
     "type" = NULL,
+    "status_code" = NULL,
     "estimates" = NULL,
     "standarderrors" = NULL,
     "model" = NULL,
