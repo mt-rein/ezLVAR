@@ -134,10 +134,12 @@ create_P0 <- function(
 
   #### if random intercept has been requested, expand the matrices ####
   if (random_intercept) {
-    others <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
-    free <- rbind(cbind(free, others), cbind(others, free))
+    zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
+    false_matrix <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
+    na_matrix <- matrix(NA, nrow = n_factors, ncol = n_factors)
 
-    others <- matrix(NA, nrow = n_factors, ncol = n_factors)
+    free <- rbind(cbind(free, false_matrix), cbind(false_matrix, free))
+
     intercepts <- matrix(NA, n_factors, n_factors)
     for (i in 1:n_factors) {
       for (j in 1:n_factors) {
@@ -149,12 +151,12 @@ create_P0 <- function(
         )
       }
     }
-    labels <- rbind(cbind(labels, others), cbind(others, intercepts))
+    labels <- rbind(cbind(labels, na_matrix), cbind(na_matrix, intercepts))
 
     others <- matrix(0, nrow = n_factors, ncol = n_factors)
     startvalues <- rbind(
-      cbind(startvalues[[1]], others),
-      cbind(others, startvalues[[2]])
+      cbind(startvalues[[1]], zero_matrix),
+      cbind(zero_matrix, startvalues[[2]])
     )
   }
 
