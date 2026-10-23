@@ -151,7 +151,7 @@ step3 <- function(
       stop("When using mixture modeling, 'n_clusters' cannot be empty.")
     }
 
-    if (!is.null(seeds) && seeds != n_starts) {
+    if (!is.null(seeds) && length(seeds) != n_starts) {
       stop(
         "You need to provide as many seeds (length of 'seeds') as random starts (size of 'n_starts')."
       )
