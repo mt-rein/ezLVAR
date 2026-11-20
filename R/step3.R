@@ -210,7 +210,7 @@ step3 <- function(
 
   #### 2) create OpenMx matrices ####
   # number of latent variables:
-  xdim <- nrow(A@free)
+  xdim <- nrow(A)
   # exogenous covariates (ignored so far):
   udim <- 1
   # number of indicators (i.e., factor score variables)
@@ -337,7 +337,6 @@ step3 <- function(
       free = FALSE,
       values = values,
       labels = NA,
-      byrow = TRUE,
       dimnames = C_names
     )
 

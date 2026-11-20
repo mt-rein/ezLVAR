@@ -227,48 +227,165 @@ EStep <- function(pi_ks, ngroup, nclus, loglik) {
 # taken from https://github.com/AndresFPA/mmgsem/blob/main/R/E_Step.R
 
 #### generate_startvalues (internal helper) ####
+# function to check whether random values are in the bounds specified in the model matrices
+within_bounds <- function(values, model_matrix) {
+  free <- model_matrix$free
+  x  <- values[free]
+  lower <- model_matrix$lbound[free]
+  upper <- model_matrix$ubound[free]
+
+  all(is.na(lower) | x >= lower) &&
+    all(is.na(upper) | x <= upper)
+}
+
 # generate random starting values for OpenMx
 generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
   startvalues <- vector(mode = "list", length = n_clusters)
-  free_phi <- personmodel_list[[1]]$A$free
-  labels_phi <- personmodel_list[[1]]$A$labels[free_phi]
-  values_phi <- personmodel_list[[1]]$A$values[free_phi]
+  A <- personmodel_list[[1]]$matrices[[1]]
+  free_phi <- A$free
+  n_free_phi <- sum(free_phi)
+  labels_phi <- A$labels[free_phi]
 
-  free_zeta <- personmodel_list[[1]]$Q$free
-  labels_zeta <- personmodel_list[[1]]$Q$labels[free_zeta]
-  values_zeta <- personmodel_list[[1]]$Q$values[free_zeta]
+  Q <- personmodel_list[[1]]$matrices[[5]]
+  free_zeta <- Q$free
+  n_free_zeta <- sum(free_zeta)
+  # select only labels on the lower triangle of the matrix (including diagonal) to avoid duplicates:
+  labels_zeta <- Q$labels[lower.tri(Q$labels, diag = TRUE) & free_zeta]
+
+  P0 <- personmodel_list[[1]]$matrices[[8]]
+  free_P0 <- P0$free
+  n_free_P0 <- sum(free_P0)
+  # select only labels on the lower triangle of the matrix (including diagonal) to avoid duplicates:
+  labels_P0 <- P0$labels[lower.tri(P0$labels, diag = TRUE) & free_P0]
 
   for (k in 1:n_clusters) {
-    # generate a stationary matrix of regression coefficients
-    # create multiplicative noise (.5 to 1.5) for phi:
-    noise_multi <- stats::runif(length(values_phi), 0.5, 1.5)
-    # create additive noise (-0.5 to 0.5) for phi:
-    noise_add <- stats::runif(length(values_phi), -0.5, 0.5)
-    # add noise to starting values of phi:
-    phistart <- matrix(values_phi * noise_multi + noise_add, nrow = n_factors)
-    # check if the largest eigenvalue is greater than .9 in modulus:
-    ev <- eigen(phistart)$values
-    max_modulus <- max(Mod(ev))
-    if (max_modulus > .9) {
-      # if yes, rescale the matrix:
-      phistart_scaled <- phistart * (.9 / max_modulus)
-    } else {
-      phistart_scaled <- phistart
+    # attempt to create random starting values that are within the bounds specified in the model matrices
+    maxtries <- 1000
+    for (attempt in 1:maxtries) {
+      # generate a stationary matrix of regression coefficients
+      # phi parameters:
+      # create multiplicative noise (.5 to 1.5) for free phi parameters:
+      noise_multi <- matrix(1, nrow = nrow(A), ncol = ncol(A))
+      noise_multi[free_phi] <- stats::runif(n_free_phi, 0.5, 1.5)
+      # create additive noise (-0.5 to 0.5) for free phi parameters:
+      noise_add <- matrix(0, nrow = nrow(A), ncol = ncol(A))
+      noise_add[free_phi] <- stats::runif(n_free_phi, -0.5, 0.5)
+      # add noise to starting values of phi:
+      values_phi <- A$values * noise_multi + noise_add
+
+      # check if within the bounds, then fix to bounds if not:
+      below_bounds <- free_phi & !is.na(A$lbound) & values_phi < A$lbound
+      values_phi[below_bounds] <- A$lbound[below_bounds]
+      above_bounds <- free_phi & !is.na(A$ubound) & values_phi > A$ubound
+      values_phi[above_bounds] <- A$ubound[above_bounds]
+
+      # check if the largest eigenvalue is greater than .9 in modulus:
+      # (select 1:n_factors to account for possible random intercept specification)
+      ev <- eigen(values_phi[1:n_factors, 1:n_factors])$values
+      max_modulus <- max(Mod(ev))
+      if (max_modulus > .9) {
+        # if yes, rescale the matrix:
+        values_phi[1:n_factors, 1:n_factors] <- values_phi[1:n_factors, 1:n_factors] * (.9 / max_modulus)
+      }
+
+      ## zeta parameters:
+      # generate a positive definitive matrix of innovation (co)variances
+      # create multiplicative noise (.5 to 1.5) for free zeta parameters:
+      noise_multi <- matrix(1, nrow = nrow(Q), ncol = ncol(Q))
+      noise_multi[free_zeta] <- stats::runif(n_free_zeta, 0.5, 1.5)
+      # create additive noise (-0.5 to 0.5) for free zeta parameters:
+      noise_add <- matrix(0, nrow = nrow(Q), ncol = ncol(Q))
+      noise_add[free_zeta] <- stats::runif(n_free_zeta, -0.5, 0.5)
+      # add noise to starting values of zeta:
+      values_zeta <- Q$values * noise_multi + noise_add
+
+      # check if within the bounds, then fix to bounds if not:
+      below_bounds <- free_zeta & !is.na(Q$lbound) & values_zeta < Q$lbound
+      values_zeta[below_bounds] <- Q$lbound[below_bounds]
+      above_bounds <- free_zeta & !is.na(Q$ubound) & values_zeta > Q$ubound
+      values_zeta[above_bounds] <- Q$ubound[above_bounds]
+
+      # turn the matrix into a positive definitive matrix:
+      # (select 1:n_factors to account for possible random intercept specification)
+      values_zeta[1:n_factors, 1:n_factors] <- Matrix::nearPD(values_zeta[1:n_factors, 1:n_factors])$mat |> as.matrix()
+
+      ## P0 parameters:
+      # generate a positive definitive matrix of initial (co)variances (P0)
+      # create multiplicative noise (.5 to 1.5) for free P0 parameters:
+      noise_multi <- matrix(1, nrow = nrow(P0), ncol = ncol(P0))
+      noise_multi[free_P0] <- stats::runif(n_free_P0, 0.5, 1.5)
+      # create additive noise (-0.5 to 0.5) for free P0 parameters:
+      noise_add <- matrix(0, nrow = nrow(P0), ncol = ncol(P0))
+      noise_add[free_P0] <- stats::runif(n_free_P0, -0.5, 0.5)
+      # add noise to starting values of P0:
+      values_P0 <- P0$values * noise_multi + noise_add
+
+      # check if within the bounds, then fix to bounds if not:
+      below_bounds <- free_P0 & !is.na(P0$lbound) & values_P0 < P0$lbound
+      values_P0[below_bounds] <- P0$lbound[below_bounds]
+      above_bounds <- free_P0 & !is.na(P0$ubound) & values_P0 > P0$ubound
+      values_P0[above_bounds] <- P0$ubound[above_bounds]
+
+      # turn the matrix into a positive definitive matrix:
+      # (select 1:n_factors to account for possible random intercept specification)
+      values_P0[1:n_factors, 1:n_factors] <- Matrix::nearPD(values_P0[1:n_factors, 1:n_factors])$mat |> as.matrix()
+      # if there's a random intercept, also do this for the lower right sub-matrix
+      if (nrow(values_P0) > n_factors && ncol(values_P0) > n_factors) {
+        values_P0[(n_factors + 1):nrow(values_P0), (n_factors + 1):ncol(values_P0)] <- Matrix::nearPD(values_P0[(n_factors + 1):nrow(values_P0), (n_factors + 1):ncol(values_P0)])$mat |> as.matrix()
+      }
+
+      # check again if the generated starting values are within the bounds specified in the model matrices
+      # (because the rescaling and nearPD function might have changed the values)
+      if (within_bounds(values_phi, A) &&
+          within_bounds(values_zeta, Q) &&
+          within_bounds(values_P0, P0)) {
+
+        ## create named vector of starting values:
+        # extract the new starting values assign the corresponding labels as names:
+        startvalues_phi <- values_phi[free_phi]
+        names(startvalues_phi) <- labels_phi
+
+        # only obtain lower triangle to avoid duplicates in the covariances:
+        startvalues_zeta <- values_zeta[lower.tri(values_zeta, diag = TRUE) & free_zeta]
+        names(startvalues_zeta) <- labels_zeta
+
+        startvalues_P0 <- values_P0[lower.tri(values_P0, diag = TRUE) & free_P0]
+        names(startvalues_P0) <- labels_P0
+
+        break
+      }
+
+      # if the maximum number of attempts is reached and the generated starting values are still not within bounds, use the pre-specified starting values from the model matrices
+      if (attempt == maxtries) {
+        ## create named vector of starting values, using the original starting values without random perturbation where needed:
+        if (!within_bounds(values_phi, A)) {
+          startvalues_phi <- A$values[free_phi]
+        } else {
+          startvalues_phi <- values_phi[free_phi]
+        }
+        names(startvalues_phi) <- labels_phi
+        if (!within_bounds(values_zeta, Q)) {
+          startvalues_zeta <- Q$values[lower.tri(Q$values, diag = TRUE) & free_zeta]
+        } else {
+          startvalues_zeta <- values_zeta[lower.tri(values_zeta, diag = TRUE) & free_zeta]
+        }
+        names(startvalues_zeta) <- labels_zeta
+
+        if (!within_bounds(values_P0, P0)) {
+          startvalues_P0 <- P0$values[lower.tri(P0$values, diag = TRUE) & free_P0]
+        } else {
+          startvalues_P0 <- values_P0[lower.tri(values_P0, diag = TRUE) & free_P0]
+        }
+        names(startvalues_P0) <- labels_P0
+      }
     }
 
-    # generate a positive definitive matrix of innovation (co)variances
-    # create multiplicative noise (.5 to 1.5) for zeta:
-    noise_multi <- stats::runif(length(values_zeta), 0.5, 1.5)
-    # create additive noise (0.5 to 1.5) for zeta:
-    noise_add <- stats::runif(length(values_zeta), 0.5, 1.5)
-    zetastart <- matrix(values_zeta * noise_multi + noise_add, nrow = n_factors)
-    zetastartPD <- Matrix::nearPD(zetastart)$mat |> as.matrix()
-
     startvalues[[k]] <- c(
-      c(phistart_scaled),
-      zetastartPD[lower.tri(zetastartPD, diag = TRUE)]
+      startvalues_phi,
+      startvalues_zeta,
+      startvalues_P0
     )
-    names(startvalues[[k]]) <- c(labels_phi, unique(labels_zeta))
+
   }
   return(startvalues)
 }
