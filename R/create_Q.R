@@ -195,9 +195,8 @@ create_Q <- function(
     values = startvalues,
     labels = labels,
     lbound = lbound,
-    ubound = ubound,
-    byrow = TRUE
-  )
+    ubound = ubound
+    )
 
   return(Q)
 }
