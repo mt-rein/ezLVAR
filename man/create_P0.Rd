@@ -2,26 +2,65 @@
 % Please edit documentation in R/create_P0.R
 \name{create_P0}
 \alias{create_P0}
-\title{Creates a Regression Effects Matrix}
+\title{Creates a P0 Matrix for OpenMx}
 \usage{
-create_P0(step2output, random_intercept = FALSE, startvalues = NULL)
+create_P0(
+  step2output,
+  random_intercept = FALSE,
+  startvalues = NULL,
+  free = NULL,
+  labels = NULL,
+  lbound = NULL,
+  ubound = NULL
+)
 }
 \arguments{
 \item{step2output}{An object obtained with the \link{step2} function.}
 
 \item{random_intercept}{Logical. If TRUE, the matrices \code{startvalues}, \code{free},
-\code{labels}, \code{lbound}, and \code{ubound} are expanded to accommodate the
-specification of a random intercept.}
+\code{labels}, \code{lbound}, and \code{ubound} are automatically expanded to accommodate
+the specification of a random intercept.}
 
 \item{startvalues}{A square matrix of numeric values that represents the
 starting values for each parameter. The number of rows/columns must be
-equal to the number of latent factors in the model. If \code{random_intercept = TRUE}, the start values must be a list of square matrices. The first
-element of the list corresponds to the upper left matrix of P0, the second
-element to the lower left matrix of P0. Optional. If \code{NULL}, start values
-will be computed as the (co)variances of the factor score variables. If
-\code{random_intercept = TRUE}, the starting values are set to the pooled
-within-person (co)variances and the between-person (co)variances of the
-factor score variables.}
+equal to the number of latent factors in the model. If \code{random_intercept = TRUE}, \code{startvalues} must be a list of two square matrices: If
+\code{random_intercept = TRUE}, \code{startvalues} must be a list of two square
+matrices: the first corresponds to the within-person (co)variances and the
+second corresponds to the between-person (co)variances. Optional. If
+\code{NULL}, start values will be computed as the (within-person and
+between-person) (co)variances of the factor score variables.}
+
+\item{free}{A square matrix of TRUE and FALSE values that indicates which
+parameters are freely estimated. The number of rows/columns must be equal
+to the number of latent factors in the model. If \code{random_intercept = TRUE},
+\code{free} must be a list of two square matrices: the first corresponds to the
+within-person (co)variances and the second corresponds to the
+between-person (co)variances. Optional. If \code{NULL}, all elements of the P0
+matrix are freely estimated.}
+
+\item{labels}{A square matrix of strings that indicates the labels for each
+parameter (if a value is NA, no label is assigned). The number of
+rows/columns must be equal to the number of latent factors in the model. If
+\code{random_intercept = TRUE}, \code{labels} must be a list of two square matrices:
+the first corresponds to the within-person (co)variances and the second
+corresponds to the between-person (co)variances. Optional. If \code{NULL},
+labels will be automatically generated.}
+
+\item{lbound}{A square matrix of numeric values that indicates the lower
+bounds for each parameter (if a value is NA, no bounds are imposed on that
+parameter). The number of rows/columns must be equal to the number of
+latent factors in the model. If \code{random_intercept = TRUE}, \code{lbound} must be
+a list of two square matrices: the first corresponds to the within-person
+(co)variances and the second corresponds to the between-person
+(co)variances. Optional. If \code{NULL}, no lower bounds are set.}
+
+\item{ubound}{A square matrix of numeric values that indicates the upper
+bounds for each parameter (if a value is NA, no bounds are imposed on that
+parameter). The number of rows/columns must be equal to the number of
+latent factors in the model. If \code{random_intercept = TRUE}, \code{ubound} must be
+a list of two square matrices: the first corresponds to the within-person
+(co)variances and the second corresponds to the between-person
+(co)variances. Optional. If \code{NULL}, no upper bounds are set.}
 }
 \value{
 P0 An \code{OpenMx} matrix object that is entered into \code{\link[=step3]{step3()}}.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_A.R
 \name{create_A}
 \alias{create_A}
-\title{Creates a Regression Effects Matrix}
+\title{Creates a Regression Effects Matrix for OpenMx}
 \usage{
 create_A(
   step2output,
@@ -18,8 +18,8 @@ create_A(
 \item{step2output}{An object obtained with the \link{step2} function.}
 
 \item{random_intercept}{Logical. If TRUE, the matrices \code{startvalues}, \code{free},
-\code{labels}, \code{lbound}, and \code{ubound} are expanded to accommodate the
-specification of a random intercept.}
+\code{labels}, \code{lbound}, and \code{ubound} are automatically expanded to accommodate
+the specification of a random intercept.}
 
 \item{startvalues}{A square matrix of numeric values that represents the
 starting values for each parameter. The number of rows/columns must be

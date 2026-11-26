@@ -1,4 +1,4 @@
-#' Creates an Innovation Covariance Matrix
+#' Creates an Innovation Covariance Matrix for OpenMx
 #'
 #' @description This is a helper function to create the Q matrix, which is
 #'   required to specify the structural model for [step3]. The Q matrix
@@ -7,8 +7,8 @@
 #'
 #' @param step2output An object obtained with the [step2] function.
 #' @param random_intercept Logical. If TRUE, the matrices `startvalues`, `free`,
-#'   `labels`, `lbound`, and `ubound` are expanded to accommodate the
-#'   specification of a random intercept.
+#'   `labels`, `lbound`, and `ubound` are automatically expanded to accommodate
+#'   the specification of a random intercept.
 #' @param startvalues A square matrix of numeric values that represents the
 #'   starting values for each parameter. The number of rows/columns must be
 #'   equal to the number of latent factors in the model. Optional. If `NULL`,
@@ -88,51 +88,39 @@ create_Q <- function(
     } else {
       # with a random intercept, use the pooled within-person (co)variances of
       # the factor score variables as starting values
-      # Extract ID and factor scores
+
+      # extract ID variable and factor scores
       id_name <- step2output$other$id_var
       id <- step2output$data[[id_name]]
 
       X <- step2output$data[, factors, drop = FALSE]
 
-      #
-      # Use only rows with complete factor scores and non-missing ID
+      # use only rows with complete factor scores and non-missing ID
       keep <- stats::complete.cases(X) & !is.na(id)
 
       id <- id[keep]
       X <- X[keep, , drop = FALSE]
 
-      # Number of observations per person
-      n_per_person <- table(id)
+      # person-mean-center the factor scores
+      X_centered <- X
 
-      # For within-person covariance, persons need at least 2 observations
-      valid_within_ids <- names(n_per_person)[n_per_person >= 2L]
-      keep_within <- id %in% valid_within_ids
-
-      id_within <- id[keep_within]
-      X_within <- X[keep_within, , drop = FALSE]
-
-      #
-      # Person-center the factor scores
-      X_centered <- X_within
-
-      for (v in factors) {
-        person_means <- stats::ave(X_within[[v]], id_within, FUN = mean)
-        X_centered[[v]] <- X_within[[v]] - person_means
+      for (f in factors) {
+        person_means <- stats::ave(X[[f]], id, FUN = mean)
+        X_centered[[f]] <- X[[f]] - person_means
       }
 
       X_centered <- as.matrix(X_centered)
 
-      #
-      # Pooled within-person covariance matrix
-      n_obs_within <- nrow(X_centered)
-      n_persons_within <- length(unique(id_within))
+      # pooled within-person covariance matrix
+      n_obs_total <- nrow(X_centered)
+      n_persons <- length(unique(id))
 
-      within_cov <- crossprod(X_centered) / (n_obs_within - n_persons_within)
+      within_cov <- crossprod(X_centered) / (n_obs_total - n_persons)
       startvalues <- within_cov
     }
   }
 
-  # create matrix that indicates free parameters
+  # create matrix that indicates free parameters (all freely estimated)
   if (is.null(free)) {
     free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
   }
@@ -141,7 +129,7 @@ create_Q <- function(
   if (is.null(labels)) {
     labels <- matrix(NA, n_factors, n_factors)
 
-    # Fill the matrix with symmetric labels
+    # fill the matrix with symmetric labels
     for (i in 1:n_factors) {
       for (j in 1:n_factors) {
         labels[i, j] <- paste0(
@@ -154,7 +142,7 @@ create_Q <- function(
     }
   }
 
-  # create lbound and ubound objects if not specified by user
+  # create lbound and ubound objects (no bounds)
   if (is.null(lbound)) {
     lbound <- matrix(NA, n_factors, n_factors)
   }

@@ -1,4 +1,4 @@
-#' Creates a Regression Effects Matrix
+#' Creates a Regression Effects Matrix for OpenMx
 #'
 #' @description This is a helper function to create the A matrix, which is
 #'   required to specify the structural model for [step3]. The A matrix
@@ -8,8 +8,8 @@
 #'
 #' @param step2output An object obtained with the [step2] function.
 #' @param random_intercept Logical. If TRUE, the matrices `startvalues`, `free`,
-#'   `labels`, `lbound`, and `ubound` are expanded to accommodate the
-#'   specification of a random intercept.
+#'   `labels`, `lbound`, and `ubound` are automatically expanded to accommodate
+#'   the specification of a random intercept.
 #' @param startvalues A square matrix of numeric values that represents the
 #'   starting values for each parameter. The number of rows/columns must be
 #'   equal to the number of latent factors in the model. Optional. If `NULL`,
@@ -82,7 +82,7 @@ create_A <- function(
     startvalues <- matrix(0, nrow = n_factors, ncol = n_factors)
   }
 
-  # create matrix that indicates free parameters
+  # create matrix that indicates free parameters (all freely estimated)
   if (is.null(free)) {
     free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
   }
@@ -94,7 +94,7 @@ create_A <- function(
     })
   }
 
-  # create lbound and ubound objects if not specified by user
+  # create lbound and ubound objects (no bounds)
   if (is.null(lbound)) {
     lbound <- matrix(NA, n_factors, n_factors)
   }

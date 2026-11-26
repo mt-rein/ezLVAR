@@ -240,63 +240,13 @@ step3 <- function(
   }
 
   if (is.null(P0)) {
-    # create matrix that indiciates free parameters
-    free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
-
-    # create label matrix
-    labels <- matrix(NA, n_factors, n_factors)
-    # Fill the matrix with symmetric labels
-    for (i in 1:n_factors) {
-      for (j in 1:n_factors) {
-        labels[i, j] <- paste0(
-          "P0_",
-          factors[min(i, j)],
-          "_",
-          factors[max(i, j)]
-        )
-      }
+    RI_spec <- ifelse(xdim > ydim, TRUE, FALSE)
+    if(RI_spec) {
+      P0 <- create_P0(step2output,
+                      random_intercept = TRUE)
+    } else {
+      P0 <- create_P0(step2output)
     }
-
-    # create startvalues
-    startvalues <- matrix(100, nrow = n_factors, ncol = n_factors)
-    diag(startvalues) <- 1000
-
-    # if random intercept is included, expand these matrices
-    if (xdim > ydim) {
-      others <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
-      free <- rbind(cbind(free, others), cbind(others, free))
-
-      others <- matrix(NA, nrow = n_factors, ncol = n_factors)
-      intercepts <- matrix(NA, n_factors, n_factors)
-      for (i in 1:n_factors) {
-        for (j in 1:n_factors) {
-          intercepts[i, j] <- paste0(
-            "P0_icp_",
-            factors[min(i, j)],
-            "_",
-            factors[max(i, j)]
-          )
-        }
-      }
-      labels <- rbind(cbind(labels, others), cbind(others, intercepts))
-
-      others <- matrix(0, nrow = n_factors, ncol = n_factors)
-      startvalues <- rbind(
-        cbind(startvalues, others),
-        cbind(others, startvalues)
-      )
-    }
-
-    P0 <- OpenMx::mxMatrix(
-      type = "Full",
-      name = "P0",
-      nrow = xdim,
-      ncol = xdim,
-      free = free,
-      values = startvalues,
-      labels = labels,
-      byrow = TRUE
-    )
   }
 
   # u (= covariates)

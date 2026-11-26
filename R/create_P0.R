@@ -1,22 +1,49 @@
-#' Creates a Regression Effects Matrix
+#' Creates a P0 Matrix for OpenMx
 #'
 #' @description This is a helper function to create the P0 matrix. The P0 matrix
 #'   describes the initial (co)variances in the State Space model.
 #'
 #' @param step2output An object obtained with the [step2] function.
 #' @param random_intercept Logical. If TRUE, the matrices `startvalues`, `free`,
-#'   `labels`, `lbound`, and `ubound` are expanded to accommodate the
-#'   specification of a random intercept.
+#'   `labels`, `lbound`, and `ubound` are automatically expanded to accommodate
+#'   the specification of a random intercept.
 #' @param startvalues A square matrix of numeric values that represents the
 #'   starting values for each parameter. The number of rows/columns must be
 #'   equal to the number of latent factors in the model. If `random_intercept =
-#'   TRUE`, the start values must be a list of square matrices. The first
-#'   element of the list corresponds to the upper left matrix of P0, the second
-#'   element to the lower left matrix of P0. Optional. If `NULL`, start values
-#'   will be computed as the (co)variances of the factor score variables. If
-#'   `random_intercept = TRUE`, the starting values are set to the pooled
-#'   within-person (co)variances and the between-person (co)variances of the
-#'   factor score variables.
+#'   TRUE`, `startvalues` must be a list of two square matrices: If
+#'   `random_intercept = TRUE`, `startvalues` must be a list of two square
+#'   matrices: the first corresponds to the within-person (co)variances and the
+#'   second corresponds to the between-person (co)variances. Optional. If
+#'   `NULL`, start values will be computed as the (within-person and
+#'   between-person) (co)variances of the factor score variables.
+#' @param free A square matrix of TRUE and FALSE values that indicates which
+#'   parameters are freely estimated. The number of rows/columns must be equal
+#'   to the number of latent factors in the model. If `random_intercept = TRUE`,
+#'   `free` must be a list of two square matrices: the first corresponds to the
+#'   within-person (co)variances and the second corresponds to the
+#'   between-person (co)variances. Optional. If `NULL`, all elements of the P0
+#'   matrix are freely estimated.
+#' @param labels A square matrix of strings that indicates the labels for each
+#'   parameter (if a value is NA, no label is assigned). The number of
+#'   rows/columns must be equal to the number of latent factors in the model. If
+#'   `random_intercept = TRUE`, `labels` must be a list of two square matrices:
+#'   the first corresponds to the within-person (co)variances and the second
+#'   corresponds to the between-person (co)variances. Optional. If `NULL`,
+#'   labels will be automatically generated.
+#' @param lbound A square matrix of numeric values that indicates the lower
+#'   bounds for each parameter (if a value is NA, no bounds are imposed on that
+#'   parameter). The number of rows/columns must be equal to the number of
+#'   latent factors in the model. If `random_intercept = TRUE`, `lbound` must be
+#'   a list of two square matrices: the first corresponds to the within-person
+#'   (co)variances and the second corresponds to the between-person
+#'   (co)variances. Optional. If `NULL`, no lower bounds are set.
+#' @param ubound A square matrix of numeric values that indicates the upper
+#'   bounds for each parameter (if a value is NA, no bounds are imposed on that
+#'   parameter). The number of rows/columns must be equal to the number of
+#'   latent factors in the model. If `random_intercept = TRUE`, `ubound` must be
+#'   a list of two square matrices: the first corresponds to the within-person
+#'   (co)variances and the second corresponds to the between-person
+#'   (co)variances. Optional. If `NULL`, no upper bounds are set.
 #'
 #' @returns P0 An `OpenMx` matrix object that is entered into [step3()].
 #'
@@ -24,7 +51,11 @@
 create_P0 <- function(
   step2output,
   random_intercept = FALSE,
-  startvalues = NULL
+  startvalues = NULL,
+  free = NULL,
+  labels = NULL,
+  lbound = NULL,
+  ubound = NULL
 ) {
   factors <- step2output$other$factors
   n_factors <- length(factors)
@@ -34,131 +65,170 @@ create_P0 <- function(
     stop("The random_intercept argument must be TRUE or FALSE.")
   }
 
-  #### create elements that have not been provided by the user ####
-  # create matrix that indicates free parameters
-  free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
-  # create label matrix
-  labels <- outer(factors, factors, FUN = function(i, j) {
-    paste0("phi_", i, "_", j)
-  })
+  #### no random intercept specification ####
+  if (!random_intercept) {
+    #### create elements that have not been provided by the user ####
+    # create start values matrix ((co)variances of factor scores)
+    if (is.null(startvalues)) {
+      startvalues <- stats::var(step2output$data[, factors], na.rm = TRUE)
+    }
 
-  # create label matrix
-  labels <- matrix(NA, n_factors, n_factors)
-  # Fill the matrix with symmetric labels
-  for (i in 1:n_factors) {
-    for (j in 1:n_factors) {
-      labels[i, j] <- paste0(
-        "P0_",
-        factors[min(i, j)],
-        "_",
-        factors[max(i, j)]
-      )
+    # create matrix that indicates free parameters (all freely estimated)
+    if (is.null(free)) {
+      free <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
+    }
+
+    # create label matrix
+    if (is.null(labels)) {
+      labels <- matrix(NA, n_factors, n_factors)
+      # fill the matrix with symmetric labels
+      for (i in 1:n_factors) {
+        for (j in 1:n_factors) {
+          labels[i, j] <- paste0(
+            "P0_",
+            factors[min(i, j)],
+            "_",
+            factors[max(i, j)]
+          )
+        }
+      }
+    }
+
+    # create lbound and ubound objects (no bounds)
+    if (is.null(lbound)) {
+      lbound <- matrix(NA, n_factors, n_factors)
+    }
+    if (is.null(ubound)) {
+      ubound <- matrix(NA, n_factors, n_factors)
     }
   }
 
-  # create matrix with start values (1000 on diagonal, 100 on off-diagonal)
-  if (is.null(startvalues)) {
-    if (!random_intercept) {
-      startvalues <- stats::var(step2output$data[, factors], na.rm = TRUE)
-    } else {
-      # Extract ID and factor scores
+  #### with random intercept specification ####
+  if (random_intercept) {
+    # matrices that will be used to expand start values/labels/free values etc
+    # to accommodate random intercept
+    zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
+    false_matrix <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
+    na_matrix <- matrix(NA, nrow = n_factors, ncol = n_factors)
+
+    #### create elements that have not been provided by the user ####
+    # create start values (pooled within-person covariance matrix and
+    # between-person covariance matrix)
+    if (is.null(startvalues)) {
+      # extract ID variable and factor scores
       id_name <- step2output$other$id_var
       id <- step2output$data[[id_name]]
 
       X <- step2output$data[, factors, drop = FALSE]
 
-      # Use only rows with complete factor scores and non-missing ID
+      # use only rows with complete factor scores and non-missing ID
       keep <- stats::complete.cases(X) & !is.na(id)
 
       id <- id[keep]
       X <- X[keep, , drop = FALSE]
 
-      # Number of observations per person
-      n_per_person <- table(id)
+      # pooled within-person covariance matrix:
+      # person-mean-center the factor scores
+      X_centered <- X
 
-      # ------------------------------------------------------------------
-      #
-      # 1. Within-person covariance/variance
-      #
-      # ------------------------------------------------------------------
-
-      # For within-person covariance, persons need at least 2 observations
-      valid_within_ids <- names(n_per_person)[n_per_person >= 2L]
-      keep_within <- id %in% valid_within_ids
-
-      id_within <- id[keep_within]
-      X_within <- X[keep_within, , drop = FALSE]
-
-      # Person-center the factor scores
-      X_centered <- X_within
-
-      for (v in factors) {
-        person_means <- stats::ave(X_within[[v]], id_within, FUN = mean)
-        X_centered[[v]] <- X_within[[v]] - person_means
+      for (f in factors) {
+        person_means <- stats::ave(X[[f]], id, FUN = mean)
+        X_centered[[f]] <- X[[f]] - person_means
       }
 
       X_centered <- as.matrix(X_centered)
 
-      # Pooled within-person covariance matrix
-      n_obs_within <- nrow(X_centered)
-      n_persons_within <- length(unique(id_within))
+      # compute the pooled within-person covariance matrix
+      n_obs_total <- nrow(X_centered)
+      n_persons <- length(unique(id))
 
-      within_cov <- crossprod(X_centered) / (n_obs_within - n_persons_within)
+      within_cov <- crossprod(X_centered) / (n_obs_total - n_persons)
       startvalues_w <- within_cov
 
-      #
-      # ------------------------------------------------------------------
-      #
-      # 2. Between-person covariance/variance
-      #
-      # ------------------------------------------------------------------
-
-      # Compute person means for each factor
+      # between-person covariance matrix
+      # compute person means for each factor:
       person_means <- stats::aggregate(
         X,
         by = list(id = id),
         FUN = mean
       )
 
-      # Remove the ID column
-      X_means <- person_means[, factors, drop = FALSE]
-
-      # Between-person covariance matrix
-      between_cov <- stats::cov(X_means)
-
+      # compute the between-person covariance matrix:
+      between_cov <- stats::cov(person_means[, factors, drop = FALSE])
       startvalues_b <- between_cov
-
-      startvalues <- list(startvalues_w, startvalues_b)
+    } else {
+      startvalues_w <- startvalues[[1]]
+      startvalues_b <- startvalues[[2]]
     }
-  }
 
-  #### if random intercept has been requested, expand the matrices ####
-  if (random_intercept) {
-    zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
-    false_matrix <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
-    na_matrix <- matrix(NA, nrow = n_factors, ncol = n_factors)
-
-    free <- rbind(cbind(free, false_matrix), cbind(false_matrix, free))
-
-    intercepts <- matrix(NA, n_factors, n_factors)
-    for (i in 1:n_factors) {
-      for (j in 1:n_factors) {
-        intercepts[i, j] <- paste0(
-          "P0_icp_",
-          factors[min(i, j)],
-          "_",
-          factors[max(i, j)]
-        )
-      }
-    }
-    labels <- rbind(cbind(labels, na_matrix), cbind(na_matrix, intercepts))
-
-    others <- matrix(0, nrow = n_factors, ncol = n_factors)
+    # create complete start values matrix
     startvalues <- rbind(
-      cbind(startvalues[[1]], zero_matrix),
-      cbind(zero_matrix, startvalues[[2]])
-    )
+      cbind(startvalues_w, zero_matrix),
+      cbind(zero_matrix, startvalues_b))
+
+    # create matrix that indicates free parameters (all freely estimated)
+    if (is.null(free)) {
+      free_w <- free_b <- matrix(TRUE, nrow = n_factors, ncol = n_factors)
+    } else {
+      free_w <- free[[1]]
+      free_b <- free[[2]]
+    }
+    # create complete free matrix:
+    free <- rbind(cbind(free_w, false_matrix), cbind(false_matrix, free_b))
+
+    # create label matrix
+    if (is.null(labels)) {
+      labels_w <- matrix(NA, n_factors, n_factors)
+      # fill the matrix with symmetric labels
+      for (i in 1:n_factors) {
+        for (j in 1:n_factors) {
+          labels_w[i, j] <- paste0(
+            "P0_w_",
+            factors[min(i, j)],
+            "_",
+            factors[max(i, j)]
+          )
+        }
+      }
+
+      labels_b <- matrix(NA, n_factors, n_factors)
+      for (i in 1:n_factors) {
+        for (j in 1:n_factors) {
+          labels_b[i, j] <- paste0(
+            "P0_b_",
+            factors[min(i, j)],
+            "_",
+            factors[max(i, j)]
+          )
+        }
+      }
+    } else {
+      labels_w <- labels[[1]]
+      labels_b <- labels[[2]]
+    }
+
+    # create complete labels matrix:
+    labels <- rbind(cbind(labels_w, na_matrix), cbind(na_matrix, labels_b))
+
+    # create lbound and ubound objects (no bounds)
+    if (is.null(lbound)) {
+      lbound_w <- lbound_b <- matrix(NA, n_factors, n_factors)
+    } else {
+      lbound_w <- lbound[[1]]
+      lbound_b <- lbound[[2]]
+    }
+    if (is.null(ubound)) {
+      ubound_w <- ubound_b <- matrix(NA, n_factors, n_factors)
+    } else {
+      ubound_w <- ubound[[1]]
+      ubound_b <- ubound[[2]]
+    }
+
+    # create complete lbound and ubound matrices:
+    lbound <- rbind(cbind(lbound_w, na_matrix), cbind(na_matrix, lbound_b))
+    ubound <- rbind(cbind(ubound_w, na_matrix), cbind(na_matrix, ubound_b))
   }
+
 
   #### create OpenMx model object ####
   P0 <- OpenMx::mxMatrix(
@@ -169,7 +239,8 @@ create_P0 <- function(
     free = free,
     values = startvalues,
     labels = labels,
-    byrow = TRUE
+    lbound = lbound,
+    ubound = ubound
   )
 
   return(P0)
