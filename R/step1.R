@@ -66,6 +66,15 @@ step1 <- function(
     )
   }
 
+  if (!id_var %in% colnames(data)) {
+    stop("The ID variable was not found in the data.")
+  }
+
+  if (anyNA(data[[id_var]])) {
+    stop("The ID variable contains missing values.")
+  }
+
+
   #### Confirmatory Factor Analysis per block #####
 
   # if there are no MM blocks defined, turn the MM into a list with a single MM

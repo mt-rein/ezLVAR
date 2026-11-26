@@ -9,8 +9,7 @@
 #'   the specification of a random intercept.
 #' @param startvalues A square matrix of numeric values that represents the
 #'   starting values for each parameter. The number of rows/columns must be
-#'   equal to the number of latent factors in the model. If `random_intercept =
-#'   TRUE`, `startvalues` must be a list of two square matrices: If
+#'   equal to the number of latent factors in the model. If
 #'   `random_intercept = TRUE`, `startvalues` must be a list of two square
 #'   matrices: the first corresponds to the within-person (co)variances and the
 #'   second corresponds to the between-person (co)variances. Optional. If
@@ -21,8 +20,7 @@
 #'   to the number of latent factors in the model. If `random_intercept = TRUE`,
 #'   `free` must be a list of two square matrices: the first corresponds to the
 #'   within-person (co)variances and the second corresponds to the
-#'   between-person (co)variances. Optional. If `NULL`, all elements of the P0
-#'   matrix are freely estimated.
+#'   between-person (co)variances. Optional. If `NULL`, all within- and between-person (co)variances are freely estimated.
 #' @param labels A square matrix of strings that indicates the labels for each
 #'   parameter (if a value is NA, no label is assigned). The number of
 #'   rows/columns must be equal to the number of latent factors in the model. If
@@ -61,7 +59,7 @@ create_P0 <- function(
   n_factors <- length(factors)
 
   #### Errors ####
-  if (!is.logical(random_intercept)) {
+  if (!is.logical(random_intercept) || is.na(random_intercept)) {
     stop("The random_intercept argument must be TRUE or FALSE.")
   }
 
@@ -70,7 +68,7 @@ create_P0 <- function(
     #### create elements that have not been provided by the user ####
     # create start values matrix ((co)variances of factor scores)
     if (is.null(startvalues)) {
-      startvalues <- stats::var(step2output$data[, factors], na.rm = TRUE)
+      startvalues <- stats::var(step2output$data[, factors, drop = FALSE], na.rm = TRUE)
     }
 
     # create matrix that indicates free parameters (all freely estimated)

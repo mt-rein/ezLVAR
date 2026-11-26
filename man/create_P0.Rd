@@ -23,7 +23,7 @@ the specification of a random intercept.}
 
 \item{startvalues}{A square matrix of numeric values that represents the
 starting values for each parameter. The number of rows/columns must be
-equal to the number of latent factors in the model. If \code{random_intercept = TRUE}, \code{startvalues} must be a list of two square matrices: If
+equal to the number of latent factors in the model. If
 \code{random_intercept = TRUE}, \code{startvalues} must be a list of two square
 matrices: the first corresponds to the within-person (co)variances and the
 second corresponds to the between-person (co)variances. Optional. If
@@ -35,8 +35,7 @@ parameters are freely estimated. The number of rows/columns must be equal
 to the number of latent factors in the model. If \code{random_intercept = TRUE},
 \code{free} must be a list of two square matrices: the first corresponds to the
 within-person (co)variances and the second corresponds to the
-between-person (co)variances. Optional. If \code{NULL}, all elements of the P0
-matrix are freely estimated.}
+between-person (co)variances. Optional. If \code{NULL}, all within- and between-person (co)variances are freely estimated.}
 
 \item{labels}{A square matrix of strings that indicates the labels for each
 parameter (if a value is NA, no label is assigned). The number of

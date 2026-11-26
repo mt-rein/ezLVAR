@@ -55,7 +55,7 @@ create_A <- function(
     "ubound" = ubound
   )
 
-  if (!is.logical(random_intercept)) {
+  if (!is.logical(random_intercept) || is.na(random_intercept)) {
     stop("The random_intercept argument must be TRUE or FALSE.")
   }
 

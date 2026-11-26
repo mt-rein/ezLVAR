@@ -56,7 +56,7 @@ create_Q <- function(
     "ubound" = ubound
   )
 
-  if (!is.logical(random_intercept)) {
+  if (!is.logical(random_intercept) || is.na(random_intercept)) {
     stop("The random_intercept argument must be TRUE or FALSE.")
   }
 
@@ -84,7 +84,7 @@ create_Q <- function(
     # without a random intercept, the starting values are the (co)variances of
     # the factor score variables
     if (!random_intercept) {
-      startvalues <- stats::var(step2output$data[, factors], na.rm = TRUE)
+      startvalues <- stats::var(step2output$data[, factors, drop = FALSE], na.rm = TRUE)
     } else {
       # with a random intercept, use the pooled within-person (co)variances of
       # the factor score variables as starting values
