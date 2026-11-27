@@ -46,7 +46,7 @@ create_A <- function(
   factors <- step2output$other$factors
   n_factors <- length(factors)
 
-  #### Errors ####
+  # Errors ----
   matrices <- list(
     "startvalues" = startvalues,
     "free" = free,
@@ -76,7 +76,7 @@ create_A <- function(
     }
   }
 
-  #### create elements that have not been provided by the user ####
+  # create elements that have not been provided by the user -----
   # create matrix with start values (all values equal to 0)
   if (is.null(startvalues)) {
     startvalues <- matrix(0, nrow = n_factors, ncol = n_factors)
@@ -102,7 +102,7 @@ create_A <- function(
     ubound <- matrix(NA, n_factors, n_factors)
   }
 
-  #### if random intercept has been requested, expand the matrices ####
+  # if random intercept has been requested, expand the matrices ----
   if (random_intercept) {
     zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
     false_matrix <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
@@ -125,7 +125,7 @@ create_A <- function(
     ubound <- rbind(cbind(ubound, na_matrix), cbind(na_matrix, na_matrix))
   }
 
-  #### create OpenMx model object ####
+  # create OpenMx model object ----
   A <- OpenMx::mxMatrix(
     type = "Full",
     name = "A",

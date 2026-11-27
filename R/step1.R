@@ -42,7 +42,7 @@ step1 <- function(
   group.partial = NULL,
   ...
 ) {
-  #### Errors and Warnings ####
+  # Errors and Warnings ----
   # ensure that both group.partial and measurementmodel are a list:
   if (
     !is.null(group.partial) &&
@@ -54,8 +54,7 @@ step1 <- function(
     )
   }
 
-  # ensure that both group.partial and measurementmodel are of the same
-  # length
+  # ensure that both group.partial and measurementmodel are of the same length:
   if (
     is.list(measurementmodel) &&
       is.list(group.partial) &&
@@ -75,10 +74,11 @@ step1 <- function(
   }
 
 
-  #### Confirmatory Factor Analysis per block #####
+
+  # Confirmatory Factor Analysis per block -----
 
   # if there are no MM blocks defined, turn the MM into a list with a single MM
-  # block (to facilitate coding)
+  # block (to facilitate coding):
   if (!is.list(measurementmodel)) {
     measurementmodel <- list(measurementmodel)
     group.partial <- list(group.partial)

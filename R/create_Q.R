@@ -47,7 +47,7 @@ create_Q <- function(
   factors <- step2output$other$factors
   n_factors <- length(factors)
 
-  #### Errors ####
+  # Errors ----
   matrices <- list(
     "startvalues" = startvalues,
     "free" = free,
@@ -77,7 +77,7 @@ create_Q <- function(
     }
   }
 
-  #### create elements that have not been provided by the user ####
+  # create elements that have not been provided by the user ----
   # create matrix with start values (the (co)variances of the factor scores
   # variables)
   if (is.null(startvalues)) {
@@ -150,7 +150,7 @@ create_Q <- function(
     ubound <- matrix(NA, n_factors, n_factors)
   }
 
-  #### if random intercept has been requested, expand the matrices ####
+  # if random intercept has been requested, expand the matrices ----
   if (random_intercept) {
     zero_matrix <- matrix(0, nrow = n_factors, ncol = n_factors)
     false_matrix <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
@@ -173,7 +173,7 @@ create_Q <- function(
     ubound <- rbind(cbind(ubound, na_matrix), cbind(na_matrix, na_matrix))
   }
 
-  #### create OpenMx model object ####
+  # create OpenMx model object ----
   Q <- OpenMx::mxMatrix(
     type = "Full",
     name = "Q",

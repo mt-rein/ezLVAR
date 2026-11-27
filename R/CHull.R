@@ -37,7 +37,7 @@
 #'
 #' @export
 CHull <- function(model_list, criterion = "logLik") {
-  ## errors:
+  ## Errors ----
   if (
     !is.list(model_list) ||
       !all(sapply(model_list, function(x) inherits(x, "3slvar_step3")))
@@ -55,6 +55,7 @@ CHull <- function(model_list, criterion = "logLik") {
     stop("model_list must contain at least three models for CHull analysis.")
   }
 
+  ## Step 1: ----
   # sort the models by n_groups (in case the user just creates the list in
   # random order)
   idx <- model_list |>
@@ -62,6 +63,7 @@ CHull <- function(model_list, criterion = "logLik") {
     order()
   model_list_sorted <- model_list[idx]
 
+  ## Step 2: ----
   # create dataframe with n_clusters, n_par, and fit_values (for the specified
   # criterion)
   n_clusters <- sapply(model_list_sorted, function(x) x$n_groups)
@@ -77,7 +79,8 @@ CHull <- function(model_list, criterion = "logLik") {
     fit_values = fit_values
   )
 
-  # Step 3: compare models pairwise, remove models with worse fit than a simpler
+  ## Step 3: ----
+  # compare models pairwise, remove models with worse fit than a simpler
   # model (i.e., obtain monotonic increase/decrease in fit_values)
 
   include <- rep(TRUE, nrow(df))
@@ -106,7 +109,8 @@ CHull <- function(model_list, criterion = "logLik") {
   }
   df_hull <- df[include, ]
 
-  # Step 4: exclude models that are not part of the convex hull
+  # Step 4: ----
+  # exclude models that are not part of the convex hull
   change <- TRUE
   n_models0 <- nrow(df_hull)
   # iterate while there was a change in the previous iteration (i.e., a model
@@ -149,7 +153,8 @@ CHull <- function(model_list, criterion = "logLik") {
     }
   }
 
-  # Step 5: compute scree_test values for models on the convex hull if enough
+  # Step 5: ----
+  # compute scree_test values for models on the convex hull if enough
   # models remain
   scree_test <- rep(NA, nrow(df_hull))
   # check if enough models (3 or more) remain:

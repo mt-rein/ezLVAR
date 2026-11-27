@@ -15,6 +15,7 @@ run_start <- function(
   maxit,
   verbose
 ) {
+  # Preparations ----
   # set seed:
   seed <- input_list$seed
   set.seed(seed)
@@ -50,7 +51,7 @@ run_start <- function(
 
   stable_clustering <- FALSE
 
-  #### EM Loop ####
+  # EM Loop ----
 
   # loop over iterations until stable clustering is achieved or max iterations
   # are reached
@@ -89,7 +90,7 @@ run_start <- function(
     # compute class proportions:
     class_proportions <- colMeans(post)
 
-    #### M-step: fitting SSM model and update parameter estimates ####
+    # M-step: fitting SSM model and update parameter estimates ----
     # get start values from the coefficients of previous iteration:
     if (phase == 2 | it > 1) {
       startvalues <- clustermodels_run |>
@@ -191,7 +192,7 @@ run_start <- function(
     message(glue::glue("Random start for seed {seed} finished."))
   }
 
-  # save relevant objects in list:
+  # save relevant objects in list ----
   output <- list(
     "observed_data_LL" = observed_data_LL,
     "post" = post,
@@ -263,7 +264,7 @@ generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
     maxtries <- 1000
     for (attempt in 1:maxtries) {
       # generate a stationary matrix of regression coefficients
-      # phi parameters:
+      # phi parameters ----
       # create multiplicative noise (.5 to 1.5) for free phi parameters:
       noise_multi <- matrix(1, nrow = nrow(A), ncol = ncol(A))
       noise_multi[free_phi] <- stats::runif(n_free_phi, 0.5, 1.5)
@@ -288,7 +289,7 @@ generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
         values_phi[1:n_factors, 1:n_factors] <- values_phi[1:n_factors, 1:n_factors] * (.9 / max_modulus)
       }
 
-      ## zeta parameters:
+      # zeta parameters ----
       # generate a positive definitive matrix of innovation (co)variances
       # create multiplicative noise (.5 to 1.5) for free zeta parameters:
       noise_multi <- matrix(1, nrow = nrow(Q), ncol = ncol(Q))
@@ -309,7 +310,7 @@ generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
       # (select 1:n_factors to account for possible random intercept specification)
       values_zeta[1:n_factors, 1:n_factors] <- Matrix::nearPD(values_zeta[1:n_factors, 1:n_factors])$mat |> as.matrix()
 
-      ## P0 parameters:
+      # P0 parameters ----
       # generate a positive definitive matrix of initial (co)variances (P0)
       # create multiplicative noise (.5 to 1.5) for free P0 parameters:
       noise_multi <- matrix(1, nrow = nrow(P0), ncol = ncol(P0))
@@ -357,7 +358,7 @@ generate_startvalues <- function(n_clusters, n_factors, personmodel_list) {
 
       # if the maximum number of attempts is reached and the generated starting values are still not within bounds, use the pre-specified starting values from the model matrices
       if (attempt == maxtries) {
-        ## create named vector of starting values, using the original starting values without random perturbation where needed:
+        # create named vector of starting values, using the original starting values without random perturbation where needed:
         if (!within_bounds(values_phi, A)) {
           startvalues_phi <- A$values[free_phi]
         } else {

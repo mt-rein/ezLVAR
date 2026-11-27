@@ -138,7 +138,7 @@ step3 <- function(
   tryhard = FALSE,
   verbose = TRUE
 ) {
-  #### Errors and Warnings ####
+  # Errors and Warnings ----
   if (mixture) {
     if (!is.null(group_var)) {
       stop(glue::glue(
@@ -164,7 +164,7 @@ step3 <- function(
     }
   }
 
-  #### 1) Preparations ####
+  # 1) Preparations ----
   ## extract objects from step 1 output:
   if (is.null(newdata)) {
     data <- step2output$data
@@ -208,12 +208,12 @@ step3 <- function(
     "best_seed" = NULL
   )
 
-  #### 2) create OpenMx matrices ####
+  # 2) create OpenMx matrices ----
   # number of latent variables:
   xdim <- nrow(A)
   # exogenous covariates (ignored so far):
   udim <- 1
-  # number of indicators (i.e., factor score variables)
+  # number of indicators (i.e., factor score variables):
   ydim <- n_factors
 
   # B matrix (= exogenous covariates on latent constructs)
@@ -254,7 +254,7 @@ step3 <- function(
     u <- OpenMx::mxMatrix("Zero", name = "u", nrow = udim, ncol = 1)
   }
 
-  #### 3) create person-models ####
+  # 3) create person-models ----
   # create a list of models (one for each individual):
   personmodelnames <- paste0("id_", unique_ids)
 
@@ -330,6 +330,7 @@ step3 <- function(
       OpenMx::mxData(data_i[, factors_ind, drop = FALSE], 'raw')
     )
 
+    ## account for grouping ----
     # if there is a grouping variable, relabel parameters
     # (individuals in the same group get the same labels)
     # (individuals in different groups get different labels)
@@ -369,7 +370,7 @@ step3 <- function(
     personmodel_list[[i]] <- model_i
   }
 
-  #### 4) single- and multi-group modeling ####
+  # 4) single- and multi-group modeling ----
   # combine person-models in a multi-group (i.e., multi-subject) model
   if (!mixture || n_clusters == 1) {
     starttime <- Sys.time()
@@ -387,13 +388,13 @@ step3 <- function(
 
     duration <- difftime(Sys.time(), starttime, units = "secs") |> as.numeric()
 
-    ## build output
-    ## type, n_groups, estimates, and SEs (depending on single- or multi-group)
+    # build output
+    # type, n_groups, estimates, and SEs (depending on single- or multi-group)
     if (is.null(group_var)) {
       output[["type"]] <- "single-group"
       output[["n_groups"]] <- 1L
 
-      ## estimates and SEs:
+      # estimates and SEs:
       output[["estimates"]] <- OpenMx::omxGetParameters(fullmodelr)
       output[["standarderrors"]] <- fullmodelr$output$standardErrors[, 1]
     } else {
@@ -433,7 +434,7 @@ step3 <- function(
     output[["status_code"]] <- fullmodelr$output$status$code
   }
 
-  #### 5) mixture modeling ####
+  # 5) mixture modeling ----
 
   # The estimation happens in two parts: First, the algorithm aims for a stable
   # clustering with an imprecise M-Step after a stable clustering is achieved, a
@@ -447,7 +448,7 @@ step3 <- function(
     }
     input_phase1 <- lapply(seeds, function(s) list(seed = s))
 
-    ## run Phase 1 (Generalized EM for all starts):
+    ## run Phase 1 (Generalized EM for all starts): ----
     if (verbose) {
       message(glue::glue("==== Starting Phase 1 with {n_starts} starts. ===="))
     }
@@ -534,7 +535,7 @@ step3 <- function(
       ))
     }
 
-    # run Phase 2 (full EM for the best starts):
+    ## run Phase 2 (full EM for the best starts) ----
     top_starts <- results_phase1 |>
       purrr::map_dbl(~ .x$observed_data_LL) |>
       order(decreasing = TRUE) |>
@@ -613,7 +614,7 @@ step3 <- function(
       ))
     }
 
-    # select best model:
+    ## select best model ----
     best_start <- results_phase2 |>
       purrr::map_dbl(~ .x$observed_data_LL) |>
       order(decreasing = TRUE) |>
@@ -701,7 +702,7 @@ step3 <- function(
 
     duration <- difftime(Sys.time(), starttime, units = "secs") |> as.numeric()
 
-    ## build output
+    ## build output ----
     # parameter estimates and SEs
     cluster_names <- paste0("cluster", 1:n_clusters)
     names(final_model) <- cluster_names

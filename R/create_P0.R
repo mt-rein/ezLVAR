@@ -58,14 +58,14 @@ create_P0 <- function(
   factors <- step2output$other$factors
   n_factors <- length(factors)
 
-  #### Errors ####
+  # Errors ----
   if (!is.logical(random_intercept) || is.na(random_intercept)) {
     stop("The random_intercept argument must be TRUE or FALSE.")
   }
 
-  #### no random intercept specification ####
+  # no random intercept specification -----
   if (!random_intercept) {
-    #### create elements that have not been provided by the user ####
+    # create elements that have not been provided by the user:
     # create start values matrix ((co)variances of factor scores)
     if (is.null(startvalues)) {
       startvalues <- stats::var(step2output$data[, factors, drop = FALSE], na.rm = TRUE)
@@ -101,7 +101,7 @@ create_P0 <- function(
     }
   }
 
-  #### with random intercept specification ####
+  # with random intercept specification ----
   if (random_intercept) {
     # matrices that will be used to expand start values/labels/free values etc
     # to accommodate random intercept
@@ -109,7 +109,7 @@ create_P0 <- function(
     false_matrix <- matrix(FALSE, nrow = n_factors, ncol = n_factors)
     na_matrix <- matrix(NA, nrow = n_factors, ncol = n_factors)
 
-    #### create elements that have not been provided by the user ####
+    # create elements that have not been provided by the user:
     # create start values (pooled within-person covariance matrix and
     # between-person covariance matrix)
     if (is.null(startvalues)) {
@@ -228,7 +228,7 @@ create_P0 <- function(
   }
 
 
-  #### create OpenMx model object ####
+  # create OpenMx model object ----
   P0 <- OpenMx::mxMatrix(
     type = "Full",
     name = "P0",

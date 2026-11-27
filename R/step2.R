@@ -17,7 +17,7 @@
 #'
 #' @export
 step2 <- function(step1output) {
-  ## Preparations
+  # Preparations ----
   fit_step1 <- step1output$mm_output
   data <- step1output$data
   measurementmodel <- step1output$measurementmodel
@@ -36,10 +36,9 @@ step2 <- function(step1output) {
   }
   n_blocks <- length(measurementmodel)
 
-  #### Preparations ####
-
+  # re-organize the lavaan output ----
   # create lists to store MM parameter values per block (lists with n_blocks
-  # elements, where each element is a list with n_groups elements)
+  # elements, where each element is a list with n_groups elements):
   psi_block <-
     alpha_block <-
       lambda_block <-
@@ -66,7 +65,7 @@ step2 <- function(step1output) {
 
   # create lists to store MM parameter values per group (i.e., combine the
   # block-wise MM parameters per group) -> Lists with n_groups elements, where
-  # each element is a list with n_blocks elements
+  # each element is a list with n_blocks elements:
   psi_group <-
     alpha_group <-
       lambda_group <-
@@ -115,7 +114,7 @@ step2 <- function(step1output) {
               "group1"
   }
 
-  #### compute factor scores, lambda_star, theta_star ####
+  # compute factor scores, lambda_star, theta_star ----
   # add factor score variables to data frame:
   full_data <- data
   for (f in factors) {
@@ -241,7 +240,7 @@ step2 <- function(step1output) {
     theta_star[i, factors] <- theta_star_i
   }
 
-  # assemble output
+  # assemble output ----
   output <- list(
     "data" = full_data,
     "lambda_star" = lambda_star,
